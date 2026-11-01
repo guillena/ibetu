@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ChallengeStatus {
+  PENDING
+  ACTIVE
+  RESULT
+  DISPUTE
+  CLOSED
+  CANCELLED
+}
+
+enum ChallengeMode {
+  COINS
+  CASH
+}
+
+enum Vote {
+  WIN
+  LOSS
+  DRAW
+}
+
+enum Currency {
+  COINS
+  CASH
+}
+
+enum WalletTxType {
+  RESERVE
+  PAYOUT
+  REFUND
+  BONUS_INIT
+  BONUS_WSP
+  STREAK3
+  REFERRAL
+  JUDGE
+  LIFELINE
+}
+
+/// Hechos que mueven el Term�metro de Credibilidad. Cada uno cuenta una sola vez.
+enum CredibilityEventType {
+  CLEAN_AGREEMENT
+  DISPUTE_LOST
+  PAYMENT_DEFAULT
+}
+
+enum CashPaymentStatus {
+  NOT_APPLICABLE
+  PENDING
+  PAID_CLAIMED
+  CONFIRMED
+  DEFAULTED
+}
+
+model User {
+  id                   String    @id @default(uuid())
+  displayName          String
+  username             String    @unique
+  whatsappPhone        String?   @unique
+  paymentAlias         String?
+  invitedById          String?
+  coinsAvailable       Int       @default(0)
+  coinsReserved        Int       @default(0)
+  totalPlayed          Int       @default(0)
+  totalWins            Int       @default(0)
+  cleanClosedCount     Int       @default(0)
+  disputeLostCount     Int       @default(0)
+  paymentDefaultCount  Int       @default(0)
+  credibilityScore     Int       @default(100)
+  streakDaysCount      Int       @default(0)
+  lastCleanChallengeAt DateTime?
+  lastLifelineAt       DateTime?
+  createdAt            DateTime  @default(now())
+
+  invitedBy          User?               @relation("Invites", fields: [invitedById], references: [id])
+  invitees           User[]              @relation("Invites")
+  friendshipsA       Friendship[]        @relation("FriendA")
+  friendshipsB       Friendship[]        @relation("FriendB")
+  createdChallenges  Challenge[]         @relation("Creator")
+  opponentChallenges Challenge[]         @relation("Opponent")
+  judgedChallenges   Challenge[]         @relation("Judge")
+  proposedJudges     Challenge[]         @relation("JudgeProposer")
+  transactions       WalletTransaction[]
+  events             ChallengeEvent[]
+  credibilityEvents  CredibilityEvent[]
+}
+
+model Friendship {
+  userAId   String
+  userBId   String
+  createdAt DateTime @default(now())
+
+  userA User @relation("FriendA", fields: [userAId], references: [id])
+  userB User @relation("FriendB", fields: [userBId], references: [id])
+
+  @@id([userAId, userBId])
+}
+
+model Challenge {
+  id                      String            @id @default(uuid())
+  inviteCode              String            @unique
+  title                   String
+  creatorId               String
+  opponentId              String?
+  judgeId                 String?
+  judgeProposedById       String?
+  judgeApprovedByCreator  Boolean           @default(false)
+  judgeApprovedByOpponent Boolean           @default(false)
+  mode                    ChallengeMode     @default(COINS)
+  stakeAmount             Int
+  status                  ChallengeStatus   @default(PENDING)
+  expiresAt               DateTime
+  firstDeclaredAt         DateTime?
+  judgeAssignedAt         DateTime?
+  creatorVote             Vote?
+  opponentVote            Vote?
+  winnerId                String?
+  cashPaymentStatus       CashPaymentStatus @default(NOT_APPLICABLE)
+  createdAt               DateTime          @default(now())
+  closedAt                DateTime?
+
+  creator           User                @relation("Creator", fields: [creatorId], references: [id])
+  opponent          User?               @relation("Opponent", fields: [opponentId], references: [id])
+  judge             User?               @relation("Judge", fields: [judgeId], references: [id])
+  judgeProposer     User?               @relation("JudgeProposer", fields: [judgeProposedById], references: [id])
+  events            ChallengeEvent[]
+  transactions      WalletTransaction[]
+  credibilityEvents CredibilityEvent[]
+
+  @@index([status, expiresAt])
+}
+
+model ChallengeEvent {
+  id          String   @id @default(uuid())
+  challengeId String
+  actorId     String?
+  eventType   String
+  payload     Json?
+  createdAt   DateTime @default(now())
+
+  challenge Challenge @relation(fields: [challengeId], references: [id])
+  actor     User?     @relation(fields: [actorId], references: [id])
+
+  @@index([challengeId, createdAt])
+}
+
+model WalletTransaction {
+  id             String       @id @default(uuid())
+  userId         String
+  challengeId    String?
+  currency       Currency     @default(COINS)
+  type           WalletTxType
+  amount         Int
+  idempotencyKey String       @unique
+  createdAt      DateTime     @default(now())
+
+  user      User       @relation(fields: [userId], references: [id])
+  challenge Challenge? @relation(fields: [challengeId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+/// Asiento de credibilidad: auditable e idempotente (idempotencyKey �nica).
+model CredibilityEvent {
+  id             String               @id @default(uuid())
+  userId         String
+  challengeId    String
+  type           CredibilityEventType
+  idempotencyKey String               @unique
+  createdAt      DateTime             @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  challenge Challenge @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}

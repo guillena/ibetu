@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: ibetu-postgres
+    environment:
+      POSTGRES_USER: ibetu
+      POSTGRES_PASSWORD: ibetu
+      POSTGRES_DB: ibetu
+    ports:
+      - "5432:5432"
+    volumes:
+      - ibetu_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ibetu -d ibetu"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: ibetu-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  ibetu_pgdata:
+

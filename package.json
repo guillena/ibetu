@@ -1,0 +1,13 @@
+{
+  "name": "ibetu",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @ibetu/shared && npm run build -w api && npm run build -w web",
+    "healthcheck": "node scripts/healthcheck.js",
+    "db:up": "docker compose up -d"
+  }
+}

@@ -213,6 +213,27 @@ export function CrearRetoForm() {
         ? `${window.location.origin}${invitePath}`
         : created.shareUrl;
 
+    const stakeLine =
+      created.mode === "COINS"
+        ? `🪙 *Pozo en juego:* ${(created.stakeAmount * 2).toLocaleString("es-AR")} monedas (${created.stakeAmount.toLocaleString("es-AR")} c/u)`
+        : `💵 *Apuesta entre amigos:* $${created.stakeAmount.toLocaleString("es-AR")} c/u`;
+
+    const formattedWhatsappText = [
+      "⚡ *¡Te desafío en I Bet U!*",
+      "",
+      `🎯 *"${created.title}"*`,
+      stakeLine,
+      "",
+      "👉 *Aceptá el reto acá (recibís +50 monedas gratis):*",
+      fullInviteUrl,
+    ].join("\n");
+
+    const whatsappHref =
+      created.whatsappShareUrl &&
+      !created.whatsappShareUrl.includes("localhost")
+        ? created.whatsappShareUrl
+        : `https://wa.me/?text=${encodeURIComponent(formattedWhatsappText)}`;
+
     return (
       <div className="flex flex-col gap-space-md">
         <div>
@@ -250,7 +271,7 @@ export function CrearRetoForm() {
 
           <div className="flex flex-col gap-space-xs">
             <a
-              href={created.whatsappShareUrl}
+              href={whatsappHref}
               target="_blank"
               rel="noopener noreferrer"
               data-testid="share-whatsapp-link"

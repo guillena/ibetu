@@ -333,6 +333,34 @@ test.describe("responsive", () => {
   });
 });
 
+test.describe("identidad de marca: mascota", () => {
+  test("el encabezado muestra la mascota, con texto alternativo y área táctil de 48 px", async ({ page }) => {
+    const mascot = page.locator("header").getByAltText("Mascota de I Bet U");
+    await expect(mascot).toBeVisible();
+    await expect.poll(() => mascot.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
+    const link = await box(page, 'header a[aria-label="I Bet U, ir a Retos"]');
+    expect(link.width).toBeGreaterThanOrEqual(47.5);
+    expect(link.height).toBeGreaterThanOrEqual(47.5);
+    await expect(page.getByRole("link", { name: /I Bet U, ir a Retos/ })).toHaveAttribute("href", "/");
+  });
+
+  test("el favicon y el ícono de pantalla de inicio se declaran y responden 200", async ({ page, request }) => {
+    const hrefs = await page.evaluate(() =>
+      [...document.querySelectorAll<HTMLLinkElement>('link[rel~="icon"], link[rel="apple-touch-icon"]')].map((l) => ({
+        rel: l.rel,
+        href: l.href,
+      })),
+    );
+    expect(hrefs.some((l) => l.rel.includes("icon") && !l.rel.includes("apple"))).toBe(true);
+    expect(hrefs.some((l) => l.rel === "apple-touch-icon")).toBe(true);
+    for (const { href } of hrefs) {
+      const res = await request.get(href);
+      expect(res.status(), href).toBe(200);
+      expect(res.headers()["content-type"], href).toMatch(/image\//);
+    }
+  });
+});
+
 test("capturas de pantalla para revisión visual", async ({ page }, testInfo) => {
   // Carpeta propia: Playwright vacía `test-results` en cada corrida.
   const dir = path.join(__dirname, "..", "capturas");

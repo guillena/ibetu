@@ -421,7 +421,20 @@ export class ChallengesService {
   private toView(c: Challenge): ChallengeView {
     const base = process.env.APP_URL ?? 'http://localhost:3000';
     const shareUrl = `${base}/r/${c.inviteCode}`;
-    const text = encodeURIComponent(`Te desafío en I Bet U: ${c.title} ${shareUrl}`);
+    const stakeLine =
+      c.mode === 'COINS'
+        ? `🪙 *Pozo en juego:* ${c.stakeAmount * 2} monedas (${c.stakeAmount} c/u)`
+        : `💵 *Apuesta entre amigos:* $${c.stakeAmount} c/u`;
+    const message = [
+      '⚡ *¡Te desafío en I Bet U!*',
+      '',
+      `🎯 *"${c.title}"*`,
+      stakeLine,
+      '',
+      '👉 *Aceptá el reto acá (recibís +50 monedas gratis):*',
+      shareUrl,
+    ].join('\n');
+    const text = encodeURIComponent(message);
     return {
       id: c.id,
       inviteCode: c.inviteCode,

@@ -43,11 +43,19 @@ La vista de `Detalle del Reto` SHALL mostrar la cuenta regresiva hacia el vencim
 - **THEN** la pantalla de detalle resalta la alerta en color coral/ámbar y despliega el botón para rectificar el propio voto junto al selector para proponer o aprobar al 3er amigo Juez y su reloj de 48 horas
 
 ### Requirement: Previsualización enriquecida (OpenGraph) para links en WhatsApp
-Cada enlace compartible de invitación a un reto (`/r/:code`) MUST generar metadatos OpenGraph dinámicos en el servidor para que, al compartirse en un chat de WhatsApp, se visualice una tarjeta con el título del desafío, el nombre del retador y el pozo en juego, cargando la pantalla interactiva en menos de un segundo.
+Cada enlace compartible de invitación a un reto (`/r/:code`) MUST generar metadatos OpenGraph dinámicos en el servidor (título, descripción e imagen de vista previa) para que, al compartirse en un chat de WhatsApp, se visualice una tarjeta con el título del desafío, el nombre del retador y el pozo en juego, cargando la pantalla interactiva en menos de un segundo. El mensaje de invitación MUST incluir el texto del reto, el pozo o la apuesta en juego y el link en su propio renglón.
 
 #### Scenario: Compartir link de desafío en WhatsApp
 - **WHEN** un jugador comparte el enlace de un reto recién creado en una conversación de WhatsApp
 - **THEN** WhatsApp renderiza la vista previa con el nombre del retador, el texto del desafío y el premio en juego
+
+#### Scenario: Imagen de vista previa del desafío
+- **WHEN** se solicita la imagen de vista previa de un link de invitación válido
+- **THEN** el sistema devuelve una imagen que muestra el nombre del retador con su `% Fair Play`, el texto del desafío y el pozo (o la apuesta en `Plata`)
+
+#### Scenario: Mensaje de invitación con formato
+- **WHEN** el jugador toca "Mandar por WhatsApp" tras crear un reto
+- **THEN** el mensaje prearmado incluye el texto del reto, el pozo o la apuesta en juego y el link de invitación en un renglón separado
 
 ### Requirement: Columna móvil, accesibilidad y alcance visual
 La interfaz SHALL ser una única columna de hasta 480 px, centrada en pantallas anchas, sin desborde horizontal desde los 360 px, con áreas táctiles de al menos 48 px, zoom del usuario habilitado y sin modo oscuro.
@@ -64,3 +72,18 @@ La interfaz SHALL ser una única columna de hasta 480 px, centrada en pantallas 
 - **WHEN** el usuario abre la aplicación en una pantalla de escritorio
 - **THEN** la aplicación se muestra como una columna centrada de hasta 480 px, con el mismo diseño del celular
 
+
+### Requirement: Identidad de marca con la mascota de I Bet U
+La marca de I Bet U MUST representarse con su mascota (el dado rojo con gorra azul) en el ícono de la pestaña del navegador (favicon) y en el ícono de marca de la esquina superior izquierda del encabezado, en reemplazo de cualquier ícono genérico.
+
+#### Scenario: Favicon con la mascota
+- **WHEN** el usuario abre cualquier pantalla de la aplicación en el navegador
+- **THEN** la pestaña muestra la mascota como favicon, sin fondo opaco que la tape
+
+#### Scenario: Marca en el encabezado
+- **WHEN** el usuario ve el encabezado fijo en cualquier pantalla con barras
+- **THEN** la esquina superior izquierda muestra la mascota junto al nombre "I Bet U", y tocarla lleva a `Retos`
+
+#### Scenario: Área táctil y accesibilidad de la marca
+- **WHEN** el usuario usa la marca del encabezado en un celular de 360 px
+- **THEN** el control mide al menos 48 por 48 px, la imagen tiene texto alternativo y no hay desborde horizontal

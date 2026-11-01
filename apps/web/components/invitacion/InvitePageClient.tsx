@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
@@ -237,9 +238,14 @@ export function InvitePageClient({
       {/* Encabezado de marca */}
       <div className="flex items-center justify-between">
         <Link href="/" className="flex items-center gap-space-xs">
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-on-primary shadow-level-3">
-            <Icon name="sentiment_very_satisfied" filled size={24} />
-          </span>
+          <Image
+            src="/brand/mascot.png"
+            alt="Mascota de I Bet U"
+            width={40}
+            height={40}
+            priority
+            className="h-10 w-10 object-contain drop-shadow-sm"
+          />
           <span className="type-headline-sm text-ink-navy-deep">I Bet U</span>
         </Link>
         <span className="type-label-md rounded-full bg-surface-sky-tint px-3 py-1 text-primary">

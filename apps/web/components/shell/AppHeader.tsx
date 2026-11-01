@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
 import { BalanceChip } from "./BalanceChip";
@@ -22,12 +23,14 @@ export function AppHeader() {
       <div className="mx-auto w-full max-w-[var(--shell-max-w)] border-b border-surface-sky-subtle bg-surface/85 pt-[env(safe-area-inset-top)] shadow-level-1 backdrop-blur-xl">
         <div className="flex h-14 items-center justify-between gap-space-xs px-margin">
           <Link href="/" aria-label="I Bet U, ir a Retos" className="flex touch-target items-center gap-space-xs">
-            <span className="relative flex h-10 w-10 items-center justify-center rounded-full bg-primary-container text-on-primary shadow-level-3">
-              <Icon name="sentiment_very_satisfied" filled size={24} />
-              <span className="absolute -right-0.5 -bottom-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-tertiary-fixed text-on-tertiary-fixed">
-                <Icon name="bolt" filled size={10} />
-              </span>
-            </span>
+            <Image
+              src="/brand/mascot.png"
+              alt="Mascota de I Bet U"
+              width={40}
+              height={40}
+              priority
+              className="h-10 w-10 object-contain drop-shadow-sm"
+            />
             <span className="type-headline-sm leading-none text-ink-navy-deep">I Bet U</span>
           </Link>
 

@@ -5,7 +5,7 @@ import { InstantAuthCard } from "@/components/auth/InstantAuthCard";
 import { WhatsappLinkPromptCard } from "@/components/auth/WhatsappLinkPromptCard";
 import { useShell } from "@/components/shell/shell-context";
 import { Icon } from "@/components/ui/Icon";
-import { apiFetch, type ProfileView } from "@/lib/api";
+import { ApiError, apiFetch, type ProfileView } from "@/lib/api";
 
 export function PerfilClient() {
   const { session, setSession, setFairPlay } = useShell();
@@ -28,11 +28,16 @@ export function PerfilClient() {
           band: res.credibility.band,
         });
       })
-      .catch(() => {});
+      .catch((err) => {
+        if (!active) return;
+        if (err instanceof ApiError && err.status === 401) {
+          setSession(null);
+        }
+      });
     return () => {
       active = false;
     };
-  }, [session?.accessToken, setFairPlay]);
+  }, [session?.accessToken, setFairPlay, setSession]);
 
   const isWhatsappLinked = Boolean(
     profile?.whatsappLinked ?? session?.user.whatsappLinked,

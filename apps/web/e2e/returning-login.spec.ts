@@ -28,20 +28,34 @@ test.describe("Acceso desde sitio web, Magic Link y vinculación de WhatsApp", (
       });
     });
 
+    const emptyChallenges = {
+      items: [],
+      counts: {
+        inPlay: 0,
+        toDeclare: 0,
+        toDeclareActionNeeded: 0,
+        invitationsReceived: 0,
+        invitationsSent: 0,
+      },
+    };
+
+    await page.route("**/api/challenges", async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/json",
+          body: JSON.stringify(emptyChallenges),
+        });
+        return;
+      }
+      await route.fallback();
+    });
+
     await page.route("**/api/challenges/open", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
-        body: JSON.stringify({
-          items: [],
-          counts: {
-            inPlay: 0,
-            toDeclare: 0,
-            toDeclareActionNeeded: 0,
-            invitationsReceived: 0,
-            invitationsSent: 0,
-          },
-        }),
+        body: JSON.stringify(emptyChallenges),
       });
     });
   });

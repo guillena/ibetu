@@ -17,19 +17,28 @@ function EntrarContent() {
   const paramMode: AuthCardMode =
     searchParams.get("modo") === "ingresar" ? "ingresar" : "nuevo";
   const [mode, setMode] = useState<AuthCardMode>(paramMode);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     setMode(paramMode);
   }, [paramMode]);
 
   useEffect(() => {
-    if (session?.accessToken) {
+    if (mounted && session?.accessToken) {
       router.replace("/");
     }
-  }, [session?.accessToken, router]);
+  }, [mounted, session?.accessToken, router]);
 
-  if (session?.accessToken) {
-    return null;
+  if (mounted && session?.accessToken) {
+    return (
+      <div className="py-space-lg text-center type-body-md text-on-surface-variant">
+        Cargando tus retos...
+      </div>
+    );
   }
 
   function handleModeChange(next: AuthCardMode) {

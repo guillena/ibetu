@@ -110,7 +110,7 @@ function getStatusBadge(item: OpenChallengeItem): {
 }
 
 export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) {
-  const { session, fairPlay, setFairPlay, setCoins } = useShell();
+  const { session, setSession, fairPlay, setFairPlay, setCoins } = useShell();
   const [selectedTab, setSelectedTab] = useState<FilterTab>("IN_PLAY");
   const [data, setData] = useState<OpenChallengeList>(
     initialData ?? { items: [], counts: EMPTY_COUNTS },
@@ -136,12 +136,14 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
           band: meProfile.credibility.band,
         });
       }
-    } catch {
-      /* si falla la carga inicial mantenemos el estado previo sin romper la vista */
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        setSession(null);
+      }
     } finally {
       setLoading(false);
     }
-  }, [session?.accessToken, setFairPlay]);
+  }, [session?.accessToken, setFairPlay, setSession]);
 
   useEffect(() => {
     if (initialData) {

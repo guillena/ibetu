@@ -11,6 +11,7 @@ export interface ProfileView {
   displayName: string;
   memberSince: Date;
   isSelf: boolean;
+  whatsappLinked?: boolean;
   totalPlayed: number;
   totalWins: number;
   credibility: {
@@ -50,6 +51,7 @@ export class ProfileService {
       displayName: user.displayName,
       memberSince: user.createdAt,
       isSelf,
+      ...(isSelf ? { whatsappLinked: Boolean(user.whatsappPhone) } : {}),
       totalPlayed: c.totalPlayed,
       totalWins: c.totalWins,
       credibility: { score: c.score, band: c.band, provisional: c.provisional },

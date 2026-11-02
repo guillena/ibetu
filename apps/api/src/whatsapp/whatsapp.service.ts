@@ -13,7 +13,9 @@ const LOGIN_REGEX = /\bentrar\b/i;
 
 export interface LinkTokenResult {
   token: string;
+  messageText: string;
   waUrl: string;
+  whatsappUrl: string;
   expiresInSeconds: number;
 }
 
@@ -56,10 +58,14 @@ export class WhatsappService {
     const token = `VINC-${this.generateCode()}`;
     await this.redis.set(`wsplink:${token}`, userId, LINK_TOKEN_TTL_SECONDS);
     const bot = process.env.WHATSAPP_BOT_NUMBER ?? '5490000000000';
-    const text = encodeURIComponent(`Vincular mi cuenta IBetU #${token}`);
+    const messageText = `Vincular mi cuenta IBetU #${token}`;
+    const text = encodeURIComponent(messageText);
+    const waUrl = `https://wa.me/${bot}?text=${text}`;
     return {
       token,
-      waUrl: `https://wa.me/${bot}?text=${text}`,
+      messageText,
+      waUrl,
+      whatsappUrl: waUrl,
       expiresInSeconds: LINK_TOKEN_TTL_SECONDS,
     };
   }

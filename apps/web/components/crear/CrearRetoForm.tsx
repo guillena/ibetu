@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { InstantAuthCard } from "@/components/auth/InstantAuthCard";
+import { WhatsappLinkPromptCard } from "@/components/auth/WhatsappLinkPromptCard";
 import { useShell, type CurrencyMode } from "@/components/shell/shell-context";
 import {
   ApiError,
@@ -307,6 +308,14 @@ export function CrearRetoForm() {
               <Icon name="chevron_right" size={18} />
             </Link>
           </div>
+
+          {session?.accessToken && !session.user.whatsappLinked && (
+            <WhatsappLinkPromptCard
+              accessToken={session.accessToken}
+              title="Vinculá tu WhatsApp para asegurar tu cuenta (+50 monedas)"
+              subtitle="Así te avisamos cuando tu amigo acepte el reto y podés volver a entrar a tu perfil desde cualquier dispositivo."
+            />
+          )}
         </section>
       </div>
     );

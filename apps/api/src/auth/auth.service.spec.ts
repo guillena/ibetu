@@ -28,7 +28,12 @@ describe('AuthService.instantRegister', () => {
     const res = await service.instantRegister({ displayName: ' Guille ', username: '@Guille_K' });
 
     expect(res.accessToken).toBe('token-123');
-    expect(res.user).toMatchObject({ displayName: 'Guille', username: 'guille_k', coinsAvailable: BONUS_INIT_COINS });
+    expect(res.user).toMatchObject({
+      displayName: 'Guille',
+      username: 'guille_k',
+      coinsAvailable: BONUS_INIT_COINS,
+      whatsappLinked: false,
+    });
     expect(userCreate).toHaveBeenCalledWith({
       data: { displayName: 'Guille', username: 'guille_k', coinsAvailable: 50 },
     });
@@ -79,6 +84,35 @@ describe('AuthService.instantRegister', () => {
     await expect(
       service.instantRegister({ displayName: '   ', username: 'ana_01' }),
     ).rejects.toBeInstanceOf(BadRequestException);
+  });
+
+  it('devuelve la URL pública de login por WhatsApp con el mensaje que dispara "entrar"', () => {
+    const { service } = makeService();
+    const res = service.getWhatsappLoginUrl();
+    expect(res.messageText).toBe('Quiero entrar a mi cuenta IBetU');
+    expect(res.whatsappUrl).toContain('https://wa.me/');
+    expect(decodeURIComponent(res.whatsappUrl)).toContain('Quiero entrar a mi cuenta IBetU');
+  });
+
+  it('magicLogin incluye whatsappLinked: true cuando el usuario tiene whatsappPhone', async () => {
+    const prisma: any = {
+      user: {
+        findUnique: vi.fn().mockResolvedValue({
+          id: 'u-wsp',
+          displayName: 'Guille',
+          username: 'guille_k',
+          coinsAvailable: 100,
+          whatsappPhone: '5491112345678',
+        }),
+      },
+    };
+    const jwt: any = { signAsync: vi.fn().mockResolvedValue('jwt-magic') };
+    const redis: any = { getdel: vi.fn().mockResolvedValue('u-wsp') };
+    const service = new AuthService(prisma, jwt, redis);
+
+    const res = await service.magicLogin('tok-valido');
+    expect(res.accessToken).toBe('jwt-magic');
+    expect(res.user.whatsappLinked).toBe(true);
   });
 });
 

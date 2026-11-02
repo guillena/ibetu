@@ -12,7 +12,10 @@ export interface SessionUser {
   coinsAvailable: number;
   credibilityScore: number;
   credibilityStatus: FairPlayBand;
+  whatsappLinked?: boolean;
 }
+
+export type AuthUser = SessionUser;
 
 export interface StoredSession {
   accessToken: string;
@@ -71,6 +74,7 @@ export interface ProfileView {
   displayName: string;
   memberSince: string;
   isSelf: boolean;
+  whatsappLinked?: boolean;
   totalPlayed: number;
   totalWins: number;
   credibility: {
@@ -78,6 +82,30 @@ export interface ProfileView {
     band: FairPlayBand;
     provisional: boolean;
   };
+}
+
+export interface WhatsappLoginUrlResponse {
+  messageText: string;
+  whatsappUrl: string;
+}
+
+export const DEFAULT_WHATSAPP_LOGIN_MESSAGE = "Quiero entrar a mi cuenta IBetU";
+
+export function buildFallbackWhatsappLoginUrl(botNumber = "5490000000000"): string {
+  return `https://wa.me/${botNumber}?text=${encodeURIComponent(DEFAULT_WHATSAPP_LOGIN_MESSAGE)}`;
+}
+
+export async function fetchWhatsappLoginUrl(): Promise<WhatsappLoginUrlResponse> {
+  try {
+    return await apiFetch<WhatsappLoginUrlResponse>("/auth/whatsapp/login-url", {
+      token: null,
+    });
+  } catch {
+    return {
+      messageText: DEFAULT_WHATSAPP_LOGIN_MESSAGE,
+      whatsappUrl: buildFallbackWhatsappLoginUrl(),
+    };
+  }
 }
 
 export interface FriendItem {

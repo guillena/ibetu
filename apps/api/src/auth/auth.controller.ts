@@ -1,4 +1,4 @@
-import { Body, Controller, HttpCode, Inject, Post } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Inject, Post } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import type { InstantRegisterInput } from './auth.service.js';
 
@@ -15,6 +15,11 @@ export class AuthController {
   @HttpCode(200)
   magicLogin(@Body() body: { token: string }) {
     return this.auth.magicLogin(body?.token);
+  }
+
+  @Get('whatsapp/login-url')
+  getWhatsappLoginUrl() {
+    return this.auth.getWhatsappLoginUrl();
   }
 }
 

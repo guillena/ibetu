@@ -28,7 +28,13 @@ export interface InstantRegisterResult {
     displayName: string;
     username: string;
     coinsAvailable: number;
+    whatsappLinked: boolean;
   };
+}
+
+export interface WhatsappLoginUrlResult {
+  messageText: string;
+  whatsappUrl: string;
 }
 
 @Injectable()
@@ -38,6 +44,16 @@ export class AuthService {
     @Inject(JwtService) private readonly jwt: JwtService,
     @Inject(RedisService) private readonly redis: RedisService,
   ) {}
+
+  /** Devuelve el enlace wa.me público para que un usuario registrado pida su Magic Link al bot. */
+  getWhatsappLoginUrl(): WhatsappLoginUrlResult {
+    const bot = process.env.WHATSAPP_BOT_NUMBER ?? '5490000000000';
+    const messageText = 'Quiero entrar a mi cuenta IBetU';
+    return {
+      messageText,
+      whatsappUrl: `https://wa.me/${bot}?text=${encodeURIComponent(messageText)}`,
+    };
+  }
 
   /** Genera un Magic Link de un solo uso (10 min) para que el usuario reingrese. */
   async createMagicLink(
@@ -77,6 +93,7 @@ export class AuthService {
         displayName: user.displayName,
         username: user.username,
         coinsAvailable: user.coinsAvailable,
+        whatsappLinked: Boolean(user.whatsappPhone),
       },
     };
   }
@@ -159,6 +176,7 @@ export class AuthService {
         displayName: user.displayName,
         username: user.username,
         coinsAvailable: user.coinsAvailable,
+        whatsappLinked: Boolean(user.whatsappPhone),
       },
     };
   }

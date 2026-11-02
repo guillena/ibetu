@@ -248,7 +248,7 @@ export function MonederoClient() {
           data-testid="btn-lifeline"
           disabled={!summary?.lifelineEligible || busyLifeline}
           onClick={handleClaimLifeline}
-          className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3 disabled:opacity-50"
+          className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
         >
           <Icon name="redeem" filled size={20} />
           <span>
@@ -286,7 +286,7 @@ export function MonederoClient() {
             <button
               type="submit"
               data-testid="btn-save-alias"
-              className="type-label-md touch-target rounded-lg bg-primary-container px-space-md text-on-primary"
+              className="type-label-md touch-target rounded-lg px-space-md btn-3d btn-3d--primary"
             >
               Guardar
             </button>

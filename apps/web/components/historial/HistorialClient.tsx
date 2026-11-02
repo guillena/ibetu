@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Icon } from "@/components/ui/Icon";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { useShell, type CurrencyMode } from "@/components/shell/shell-context";
 import { apiFetch } from "@/lib/api";
 
@@ -188,19 +188,11 @@ export function HistorialClient() {
           })}
         </ul>
       ) : (
-        <section
-          data-testid="history-empty-state"
-          className="flex flex-col items-center gap-space-md rounded-lg bg-surface-container-lowest p-space-lg text-center shadow-level-2"
-        >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-surface-sky-tint text-primary-container">
-            <Icon name="history" filled size={32} />
-          </span>
-          <p className="type-body-lg text-on-surface">
-            {loading
-              ? "Cargando historial..."
-              : "Cuando cierres tu primer reto, va a quedar registrado acá."}
-          </p>
-        </section>
+        <EmptyState
+          testId="history-empty-state"
+          character="buho"
+          message={loading ? "Cargando historial..." : "Cuando cierres tu primer reto, va a quedar registrado acá."}
+        />
       )}
     </div>
   );

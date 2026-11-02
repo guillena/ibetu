@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { MascotImage } from "@/components/ui/EmptyState";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
@@ -253,6 +254,13 @@ export function InvitePageClient({
         </span>
       </div>
 
+      {/* Zorro da la bienvenida sobre la tarjeta del reto */}
+      {challenge ? (
+        <div className="flex justify-center" data-testid="invite-mascot">
+          <MascotImage character="zorro" size={96} />
+        </div>
+      ) : null}
+
       {/* Tarjeta principal del desafío */}
       {challenge ? (
         <section
@@ -322,7 +330,8 @@ export function InvitePageClient({
           </div>
         </section>
       ) : (
-        <section className="rounded-lg bg-surface-container-lowest p-space-lg text-center shadow-level-2">
+        <section className="flex flex-col items-center gap-space-md rounded-lg bg-surface-container-lowest p-space-lg text-center shadow-level-2">
+          <MascotImage character="zorro" size={144} />
           <h1 className="type-title-lg text-ink-navy-deep">
             {loadingChallenge
               ? "Cargando desafío..."
@@ -439,7 +448,7 @@ export function InvitePageClient({
               type="submit"
               disabled={submitting}
               data-testid="invite-register-submit"
-              className="type-label-lg touch-target mt-1 inline-flex items-center justify-center gap-space-xs rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+              className="type-label-lg touch-target mt-1 inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
             >
               <Icon name="bolt" filled size={20} />
               <span>
@@ -479,7 +488,7 @@ export function InvitePageClient({
                 <Link
                   href={`/retos/${challenge.id}`}
                   data-testid="invite-go-detail"
-                  className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+                  className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
                 >
                   <span>Ir al Detalle del Reto</span>
                   <Icon name="chevron_right" size={18} />
@@ -494,7 +503,7 @@ export function InvitePageClient({
                 disabled={submitting}
                 onClick={handleAcceptExistingUser}
                 data-testid="accept-invite-btn"
-                className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+                className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
               >
                 <Icon name="sports_score" filled size={20} />
                 <span>
@@ -528,7 +537,7 @@ export function InvitePageClient({
                 disabled={wspLoading}
                 onClick={handleGenerateWhatsappLinkToken}
                 data-testid="btn-generate-wsp-token"
-                className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg bg-secondary px-space-md text-on-primary shadow-level-3"
+                className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--success"
               >
                 <Icon name="verified_user" size={20} />
                 <span>
@@ -550,7 +559,7 @@ export function InvitePageClient({
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="wsp-send-link"
-                  className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg bg-secondary px-space-md text-on-primary shadow-level-3"
+                  className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--success"
                 >
                   <Icon name="send" size={18} />
                   <span>Enviar mensaje por WhatsApp</span>

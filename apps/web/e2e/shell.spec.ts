@@ -52,7 +52,7 @@ test.describe("estructura y estilo", () => {
     expect(viewport).not.toMatch(/maximum-scale\s*=\s*1(\.0)?(?![\d.])/);
   });
 
-  test("las fuentes del sistema se cargan: Outfit en títulos, Manrope en el cuerpo", async ({ page }) => {
+  test("las fuentes del sistema se cargan: Nunito en títulos y en el cuerpo", async ({ page }) => {
     const familyOf = (locator: import("@playwright/test").Locator) =>
       locator.evaluate((el) => getComputedStyle(el).fontFamily);
     // Selectores por texto: así se mide el elemento correcto y no un `span` cualquiera.
@@ -66,11 +66,11 @@ test.describe("estructura y estilo", () => {
         [...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/["']/g, "")),
       ),
     };
-    expect(fam.body).toMatch(/manrope/i);
-    expect(fam.h1).toMatch(/outfit/i);
-    expect(fam.wordmark).toMatch(/outfit/i);
-    expect(fam.navLabel).toMatch(/manrope/i);
-    expect(fam.chip).toMatch(/manrope/i);
+    expect(fam.body).toMatch(/nunito/i);
+    expect(fam.h1).toMatch(/nunito/i);
+    expect(fam.wordmark).toMatch(/nunito/i);
+    expect(fam.navLabel).toMatch(/nunito/i);
+    expect(fam.chip).toMatch(/nunito/i);
     expect(fam.loaded.join("|")).toMatch(/Material Symbols Outlined/);
   });
 
@@ -104,7 +104,7 @@ test.describe("estructura y estilo", () => {
     expect(c.body).toBe("rgb(249, 249, 255)"); // surface #f9f9ff
     expect(c.activeRadio).toBe("rgb(0, 153, 255)"); // primary-container #0099ff
     expect(c.chip).toBe("rgb(255, 223, 153)"); // tertiary-fixed #ffdf99
-    expect(c.fab).toBe("rgb(0, 153, 255)");
+    expect(c.fab).toBe("rgb(0, 153, 255)"); // primary-container #0099ff (el + solo lleva ícono)
     expect(c.activeNavPill).toBe("rgb(0, 153, 255)");
   });
 

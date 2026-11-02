@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Icon } from "@/components/ui/Icon";
 import { useShell, type FairPlayBand } from "@/components/shell/shell-context";
 import {
@@ -268,7 +269,7 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
       <div
         role="tablist"
         aria-label="Filtrar retos por estado"
-        className="grid grid-cols-3 gap-1 rounded-full bg-surface-sky-tint p-1"
+        className="grid grid-cols-3 gap-1 rounded-full bg-surface-sky-tint p-1 pb-2"
       >
         <button
           type="button"
@@ -278,7 +279,7 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
           onClick={() => setSelectedTab("IN_PLAY")}
           className={`type-label-md touch-target relative flex items-center justify-center gap-1 rounded-full px-2 transition-colors ${
             selectedTab === "IN_PLAY"
-              ? "bg-primary-container text-on-primary shadow-level-3"
+              ? "btn-3d btn-3d--primary"
               : "text-ink-navy-deep"
           }`}
         >
@@ -303,7 +304,7 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
           onClick={() => setSelectedTab("TO_DECLARE")}
           className={`type-label-md touch-target relative flex items-center justify-center gap-1 rounded-full px-2 transition-colors ${
             selectedTab === "TO_DECLARE"
-              ? "bg-primary-container text-on-primary shadow-level-3"
+              ? "btn-3d btn-3d--primary"
               : "text-ink-navy-deep"
           }`}
         >
@@ -335,7 +336,7 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
           onClick={() => setSelectedTab("INVITATIONS")}
           className={`type-label-md touch-target relative flex items-center justify-center gap-1 rounded-full px-2 transition-colors ${
             selectedTab === "INVITATIONS"
-              ? "bg-primary-container text-on-primary shadow-level-3"
+              ? "btn-3d btn-3d--primary"
               : "text-ink-navy-deep"
           }`}
         >
@@ -440,7 +441,7 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
                           type="button"
                           disabled={busyId === item.id}
                           onClick={() => handleReject(item)}
-                          className="type-label-md touch-target inline-flex items-center justify-center rounded-lg bg-surface-sky-tint px-space-sm text-ink-navy-deep"
+                          className="type-label-md touch-target inline-flex items-center justify-center rounded-lg px-space-sm btn-3d btn-3d--soft"
                         >
                           Rechazar
                         </button>
@@ -448,7 +449,7 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
                           type="button"
                           disabled={busyId === item.id}
                           onClick={() => handleAccept(item)}
-                          className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+                          className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg px-space-md btn-3d btn-3d--primary"
                         >
                           {busyId === item.id ? "Aceptando..." : "Aceptar Reto"}
                         </button>
@@ -456,7 +457,7 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
                     ) : item.tab === "TO_DECLARE" ? (
                       <Link
                         href={`/retos/${item.id}`}
-                        className="type-label-lg touch-target inline-flex items-center justify-center gap-1 rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+                        className="type-label-lg touch-target inline-flex items-center justify-center gap-1 rounded-lg px-space-md btn-3d btn-3d--primary"
                       >
                         <Icon name="emoji_events" filled size={18} />
                         <span>
@@ -466,7 +467,7 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
                     ) : (
                       <Link
                         href={`/retos/${item.id}`}
-                        className="type-label-lg touch-target inline-flex items-center justify-center gap-1 rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+                        className="type-label-lg touch-target inline-flex items-center justify-center gap-1 rounded-lg px-space-md btn-3d btn-3d--primary"
                       >
                         <span>Ver Detalle</span>
                         <Icon name="chevron_right" size={18} />
@@ -479,29 +480,20 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
           })}
         </ul>
       ) : (
-        <section
-          data-testid="retos-empty-state"
-          className="flex flex-col items-center gap-space-md rounded-lg bg-surface-container-lowest p-space-lg text-center shadow-level-2"
-        >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-surface-sky-tint text-primary-container">
-            <Icon name="sports_score" filled size={32} />
-          </span>
-          <p className="type-body-lg text-on-surface">
-            {loading
+        <EmptyState
+          testId="retos-empty-state"
+          character="dadi"
+          message={
+            loading
               ? "Cargando tus desafíos..."
               : selectedTab === "IN_PLAY"
                 ? "Todavía no tenés retos en juego. Creá el primero y mandáselo a un amigo por WhatsApp."
                 : selectedTab === "TO_DECLARE"
                   ? "No tenés retos pendientes de declaración ni disputas abiertas."
-                  : "No tenés invitaciones pendientes en este momento."}
-          </p>
-          <Link
-            href="/crear"
-            className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg bg-primary-container px-space-lg text-on-primary shadow-level-3 transition-transform active:scale-[0.98]"
-          >
-            Crear un reto
-          </Link>
-        </section>
+                  : "No tenés invitaciones pendientes en este momento."
+          }
+          action={{ href: "/crear", label: "Crear un reto" }}
+        />
       )}
     </div>
   );

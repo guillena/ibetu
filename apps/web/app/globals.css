@@ -21,8 +21,8 @@
   --color-surface-container: #e8eeff;
   --color-surface-container-high: #dfe8ff;
   --color-surface-container-highest: #d7e3ff;
-  --color-on-surface: #091b37;
-  --color-on-surface-variant: #3f4753;
+  --color-on-surface: #4b4b4b;
+  --color-on-surface-variant: #6b6b6b;
   --color-inverse-surface: #20304d;
   --color-inverse-on-surface: #ecf0ff;
   --color-outline: #707884;
@@ -58,13 +58,16 @@
   --color-on-tertiary-fixed: #251a00;
   --color-on-tertiary-fixed-variant: #5a4300;
   --color-background: #f9f9ff;
-  --color-on-background: #091b37;
+  --color-on-background: #4b4b4b;
   --color-surface-variant: #d7e3ff;
   --color-sky-cyan: #33ccff;
   --color-surface-sky-tint: #f0f7ff;
   --color-surface-sky-subtle: #e1f0ff;
   --color-alert-coral: #ff5722;
-  --color-ink-navy-deep: #0e1e38;
+  --color-ink-navy-deep: #4b4b4b;
+  /* Color de acción de los botones y tabs 3D (el mismo azul brillante) y su base más oscura. */
+  --color-action: #0099ff;
+  --color-action-base: #0077cc;
   /* Colores que el documento nombra en el texto (Colors / Components) y no en el frontmatter. */
   --color-signal-green: #00c853; /* Secondary: confirmaciones y estados afirmativos */
   --color-signal-amber: #ffc400; /* Tertiary: alertas y puntos de interés */
@@ -102,49 +105,49 @@
   /* ---- Tipografía: tamaño / interlineado / peso / interletrado ---- */
   --text-display-lg: 56px;
   --text-display-lg--line-height: 64px;
-  --text-display-lg--font-weight: 800;
+  --text-display-lg--font-weight: 900;
   --text-display-lg--letter-spacing: -0.02em;
   --text-display-lg-mobile: 40px;
   --text-display-lg-mobile--line-height: 48px;
-  --text-display-lg-mobile--font-weight: 800;
+  --text-display-lg-mobile--font-weight: 900;
   --text-display-lg-mobile--letter-spacing: -0.02em;
   --text-display-md: 44px;
   --text-display-md--line-height: 52px;
-  --text-display-md--font-weight: 700;
+  --text-display-md--font-weight: 800;
   --text-display-md--letter-spacing: -0.015em;
   --text-headline-lg: 32px;
   --text-headline-lg--line-height: 40px;
-  --text-headline-lg--font-weight: 700;
+  --text-headline-lg--font-weight: 800;
   --text-headline-lg--letter-spacing: -0.01em;
   --text-headline-lg-mobile: 28px;
   --text-headline-lg-mobile--line-height: 36px;
-  --text-headline-lg-mobile--font-weight: 700;
+  --text-headline-lg-mobile--font-weight: 800;
   --text-headline-lg-mobile--letter-spacing: -0.01em;
   --text-headline-md: 24px;
   --text-headline-md--line-height: 32px;
-  --text-headline-md--font-weight: 600;
+  --text-headline-md--font-weight: 800;
   --text-headline-sm: 20px;
   --text-headline-sm--line-height: 28px;
-  --text-headline-sm--font-weight: 600;
+  --text-headline-sm--font-weight: 800;
   --text-title-lg: 18px;
   --text-title-lg--line-height: 24px;
-  --text-title-lg--font-weight: 600;
+  --text-title-lg--font-weight: 800;
   --text-body-lg: 16px;
   --text-body-lg--line-height: 24px;
-  --text-body-lg--font-weight: 500;
+  --text-body-lg--font-weight: 600;
   --text-body-md: 14px;
   --text-body-md--line-height: 20px;
-  --text-body-md--font-weight: 500;
+  --text-body-md--font-weight: 600;
   --text-body-sm: 12px;
   --text-body-sm--line-height: 16px;
-  --text-body-sm--font-weight: 500;
+  --text-body-sm--font-weight: 600;
   --text-label-lg: 14px;
   --text-label-lg--line-height: 20px;
-  --text-label-lg--font-weight: 700;
+  --text-label-lg--font-weight: 800;
   --text-label-lg--letter-spacing: 0.02em;
   --text-label-md: 12px;
   --text-label-md--line-height: 16px;
-  --text-label-md--font-weight: 700;
+  --text-label-md--font-weight: 800;
   --text-label-md--letter-spacing: 0.04em;
   --text-label-sm: 10px;
   --text-label-sm--line-height: 14px;
@@ -152,16 +155,16 @@
   --text-label-sm--letter-spacing: 0.06em;
 }
 
-/* Familias: Outfit (títulos y cifras) y Manrope (cuerpo y etiquetas), cargadas con next/font. */
+/* Familias: Nunito (títulos, cifras, cuerpo y etiquetas), cargadas con next/font. */
 @theme inline {
-  --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
-  --font-body: var(--font-manrope), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --font-body: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
 }
 
 /*
  * Estilos tipográficos completos (familia + tamaño + interlineado + peso + interletrado)
  * para usar con una sola clase: `type-headline-md`, `type-body-md`, `type-label-sm`…
- * Outfit: display, headline y title. Manrope: body y label.
+ * Nunito en todos los estilos (display, headline, title, body y label).
  */
 @utility type-display-lg {
   font-family: var(--font-display);
@@ -294,4 +297,61 @@ body {
 /* Icono de Material Symbols; el relleno se controla con la variable --fill. */
 .material-symbols-outlined {
   font-variation-settings: "FILL" var(--fill, 0), "wght" 500, "GRAD" 0, "opsz" 24;
+}
+
+/* Botones de acción en 3D: relleno + base sólida inferior que se hunde al presionar. */
+.btn-3d {
+  --btn-fill: var(--color-action);
+  --btn-base: var(--color-action-base);
+  --btn-text: #ffffff;
+  --btn-depth: 4px;
+  background-color: var(--btn-fill);
+  color: var(--btn-text);
+  box-shadow: 0 var(--btn-depth) 0 var(--btn-base);
+  transform: translateY(0);
+  transition: transform 80ms ease-out, box-shadow 80ms ease-out;
+  text-decoration: none;
+  cursor: pointer;
+}
+.btn-3d:active:not(:disabled):not([aria-disabled="true"]) {
+  transform: translateY(var(--btn-depth));
+  box-shadow: 0 0 0 var(--btn-base);
+}
+.btn-3d--primary {
+  --btn-fill: var(--color-action);
+  --btn-base: var(--color-action-base);
+}
+.btn-3d--success {
+  --btn-fill: var(--color-secondary);
+  --btn-base: #004d1d;
+}
+.btn-3d--soft {
+  --btn-fill: #ffffff;
+  --btn-base: var(--color-outline-variant);
+  --btn-text: var(--color-primary);
+  border: 2px solid var(--color-outline-variant);
+}
+.btn-3d--danger-soft {
+  --btn-fill: var(--color-error-container);
+  --btn-base: #e9a9a2;
+  --btn-text: var(--color-on-error-container);
+}
+.btn-3d--fab {
+  --btn-depth: 6px;
+}
+.btn-3d:disabled,
+.btn-3d[aria-disabled="true"] {
+  --btn-fill: #e1e4ea;
+  --btn-text: #9aa0aa;
+  background-color: #e1e4ea;
+  color: #9aa0aa;
+  border-color: transparent;
+  box-shadow: none;
+  transform: none;
+  cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-3d {
+    transition: none;
+  }
 }

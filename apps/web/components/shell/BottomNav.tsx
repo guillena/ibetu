@@ -34,7 +34,7 @@ function NavList({ pathname }: { pathname: string }) {
                 href={item.href}
                 aria-label="Crear reto"
                 aria-current={active ? "page" : undefined}
-                className="-mt-8 flex h-16 w-16 flex-col items-center justify-center rounded-full border-4 border-surface-container-lowest bg-primary-container text-on-primary shadow-level-3 transition-transform active:scale-[0.96]"
+                className="btn-3d btn-3d--primary btn-3d--fab -mt-8 flex h-16 w-16 flex-col items-center justify-center rounded-full border-4 border-surface-container-lowest"
               >
                 <Icon name={item.icon} size={32} />
               </Link>

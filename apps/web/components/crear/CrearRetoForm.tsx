@@ -275,7 +275,7 @@ export function CrearRetoForm() {
               target="_blank"
               rel="noopener noreferrer"
               data-testid="share-whatsapp-link"
-              className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg bg-secondary px-space-md text-on-primary shadow-level-3"
+              className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--success"
             >
               <Icon name="share" size={20} />
               <span>Mandar por WhatsApp</span>
@@ -289,7 +289,7 @@ export function CrearRetoForm() {
                 }
                 setCopied(true);
               }}
-              className="type-label-md touch-target inline-flex items-center justify-center gap-space-xs rounded-lg bg-surface-sky-tint px-space-md text-ink-navy-deep"
+              className="type-label-md touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--soft"
             >
               <Icon name="content_copy" size={18} />
               <span>{copied ? "¡Enlace copiado!" : "Copiar enlace"}</span>
@@ -298,7 +298,7 @@ export function CrearRetoForm() {
             <Link
               href={`/retos/${created.id}`}
               data-testid="go-to-challenge-detail"
-              className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+              className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
             >
               <span>Ver Detalle del Reto</span>
               <Icon name="chevron_right" size={18} />
@@ -645,7 +645,7 @@ export function CrearRetoForm() {
           type="submit"
           disabled={submitting}
           data-testid="submit-crear-reto"
-          className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg bg-primary-container px-space-lg text-on-primary shadow-level-3 transition-transform active:scale-[0.98] disabled:opacity-60"
+          className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-lg btn-3d btn-3d--primary"
         >
           <Icon name="sports_score" filled size={22} />
           <span>{submitting ? "Creando reto..." : "Lanzar Reto"}</span>

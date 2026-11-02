@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { EmptyState } from "@/components/ui/EmptyState";
 import { Icon } from "@/components/ui/Icon";
 import { useShell, type FairPlayBand } from "@/components/shell/shell-context";
 import { apiFetch } from "@/lib/api";
@@ -85,14 +86,14 @@ export function AmigosClient() {
                   <Link
                     href={`/historial?with=${f.id}`}
                     data-testid={`friend-history-${f.id}`}
-                    className="type-label-md touch-target inline-flex items-center justify-center rounded-lg bg-surface-sky-tint px-space-sm text-ink-navy-deep"
+                    className="type-label-md touch-target inline-flex items-center justify-center rounded-lg px-space-sm btn-3d btn-3d--soft"
                   >
                     Historial
                   </Link>
                   <Link
                     href={`/crear?opponentId=${f.id}`}
                     data-testid={`friend-challenge-${f.id}`}
-                    className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+                    className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg px-space-md btn-3d btn-3d--primary"
                   >
                     Desafiar
                   </Link>
@@ -102,25 +103,12 @@ export function AmigosClient() {
           })}
         </ul>
       ) : (
-        <section
-          data-testid="friends-empty-state"
-          className="flex flex-col items-center gap-space-md rounded-lg bg-surface-container-lowest p-space-lg text-center shadow-level-2"
-        >
-          <span className="flex h-16 w-16 items-center justify-center rounded-full bg-surface-sky-tint text-primary-container">
-            <Icon name="group" filled size={32} />
-          </span>
-          <p className="type-body-lg text-on-surface">
-            {loading
-              ? "Cargando amigos..."
-              : "Cuando un amigo acepte un reto tuyo, va a aparecer acá."}
-          </p>
-          <Link
-            href="/crear"
-            className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg bg-primary-container px-space-lg text-on-primary shadow-level-3"
-          >
-            Invitar a un amigo
-          </Link>
-        </section>
+        <EmptyState
+          testId="friends-empty-state"
+          character="oso"
+          message={loading ? "Cargando amigos..." : "Cuando un amigo acepte un reto tuyo, va a aparecer acá."}
+          action={{ href: "/crear", label: "Invitar a un amigo" }}
+        />
       )}
     </div>
   );

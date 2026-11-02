@@ -31,7 +31,7 @@ export function CurrencySwitch() {
     <div
       role="radiogroup"
       aria-label="Modo de juego"
-      className="flex h-14 w-full items-center gap-space-xxs rounded-full bg-surface-sky-subtle p-space-xxs"
+      className="flex h-[3.75rem] w-full items-start gap-space-xxs rounded-full bg-surface-sky-subtle p-space-xxs pb-space-xs"
     >
       {OPTIONS.map((option) => {
         const checked = mode === option.value;
@@ -45,10 +45,10 @@ export function CurrencySwitch() {
             tabIndex={checked ? 0 : -1}
             onClick={() => setMode(option.value)}
             onKeyDown={onKeyDown}
-            className={`type-label-lg flex h-12 flex-1 items-center justify-center gap-space-xs rounded-full transition-all active:scale-[0.98] ${
+            className={`type-label-lg flex h-12 flex-1 items-center justify-center gap-space-xs rounded-full ${
               checked
-                ? "bg-primary-container text-on-primary shadow-level-3"
-                : "text-on-surface-variant"
+                ? "btn-3d btn-3d--primary"
+                : "text-on-surface-variant transition-transform active:scale-[0.98]"
             }`}
           >
             <Icon name={option.icon} filled={checked} size={20} />

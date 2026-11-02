@@ -153,7 +153,7 @@ export function InstantAuthCard({
         <button
           type="submit"
           disabled={loading}
-          className="type-label-lg touch-target mt-1 inline-flex items-center justify-center gap-space-xs rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3 transition-transform active:scale-[0.98] disabled:opacity-60"
+          className="type-label-lg touch-target mt-1 inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
         >
           <Icon name="bolt" filled size={20} />
           <span>{loading ? "Entrando..." : submitLabel}</span>

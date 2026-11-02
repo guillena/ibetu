@@ -346,7 +346,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
         )}
         <Link
           href="/"
-          className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg bg-primary-container px-space-md text-on-primary"
+          className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg px-space-md btn-3d btn-3d--primary"
         >
           Volver a Retos
         </Link>
@@ -570,7 +570,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                 type="button"
                 data-testid="btn-change-vote"
                 onClick={() => setEditingVote(true)}
-                className="type-label-md touch-target inline-flex items-center justify-center gap-1 rounded-lg bg-surface-sky-tint px-space-md text-primary"
+                className="type-label-md touch-target inline-flex items-center justify-center gap-1 rounded-lg px-space-md btn-3d btn-3d--soft"
               >
                 <Icon name="edit" size={18} />
                 <span>Cambiar mi voto en vivo</span>
@@ -588,7 +588,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                 disabled={actionBusy}
                 data-testid="vote-win"
                 onClick={() => handleVote("WIN")}
-                className="type-label-lg touch-target flex items-center justify-between rounded-lg bg-secondary px-space-md text-on-primary shadow-level-3"
+                className="type-label-lg touch-target flex items-center justify-between rounded-lg px-space-md btn-3d btn-3d--success"
               >
                 <span className="flex items-center gap-space-xs">
                   <Icon name="emoji_events" filled size={20} />
@@ -602,7 +602,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                 disabled={actionBusy}
                 data-testid="vote-loss"
                 onClick={() => handleVote("LOSS")}
-                className="type-label-lg touch-target flex items-center justify-between rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+                className="type-label-lg touch-target flex items-center justify-between rounded-lg px-space-md btn-3d btn-3d--primary"
               >
                 <span className="flex items-center gap-space-xs">
                   <Icon name="handshake" filled size={20} />
@@ -616,7 +616,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                 disabled={actionBusy}
                 data-testid="vote-draw"
                 onClick={() => handleVote("DRAW")}
-                className="type-label-lg touch-target flex items-center justify-between rounded-lg bg-surface-sky-tint px-space-md text-ink-navy-deep"
+                className="type-label-lg touch-target flex items-center justify-between rounded-lg px-space-md btn-3d btn-3d--soft"
               >
                 <span className="flex items-center gap-space-xs">
                   <Icon name="balance" size={20} />
@@ -670,7 +670,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                   disabled={actionBusy}
                   data-testid="verdict-creator"
                   onClick={() => handleJudgeVerdict(detail.creator.id)}
-                  className="type-label-lg touch-target rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+                  className="type-label-lg touch-target rounded-lg px-space-md btn-3d btn-3d--primary"
                 >
                   Ganó {detail.creator.displayName} (@{detail.creator.username})
                 </button>
@@ -680,7 +680,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                     disabled={actionBusy}
                     data-testid="verdict-opponent"
                     onClick={() => handleJudgeVerdict(detail.opponent!.id)}
-                    className="type-label-lg touch-target rounded-lg bg-secondary px-space-md text-on-primary shadow-level-3"
+                    className="type-label-lg touch-target rounded-lg px-space-md btn-3d btn-3d--success"
                   >
                     Ganó {detail.opponent.displayName} (@
                     {detail.opponent.username})
@@ -725,7 +725,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                   disabled={actionBusy}
                   data-testid="btn-approve-judge"
                   onClick={handleApproveJudge}
-                  className="type-label-lg touch-target rounded-lg bg-secondary px-space-md text-on-primary shadow-level-3"
+                  className="type-label-lg touch-target rounded-lg px-space-md btn-3d btn-3d--success"
                 >
                   Aprobar Juez
                 </button>
@@ -766,7 +766,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                   disabled={actionBusy || !selectedJudgeId}
                   data-testid="btn-propose-judge"
                   onClick={() => handleProposeJudge(selectedJudgeId)}
-                  className="type-label-lg touch-target rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3 disabled:opacity-50"
+                  className="type-label-lg touch-target rounded-lg px-space-md btn-3d btn-3d--primary"
                 >
                   Proponer
                 </button>
@@ -801,7 +801,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                     disabled={actionBusy}
                     data-testid="btn-cash-mark-paid"
                     onClick={() => handleCashAction("paid")}
-                    className="type-label-lg touch-target rounded-lg bg-primary-container px-space-md text-on-primary shadow-level-3"
+                    className="type-label-lg touch-target rounded-lg px-space-md btn-3d btn-3d--primary"
                   >
                     Ya transferí
                   </button>
@@ -815,7 +815,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                       disabled={actionBusy}
                       data-testid="btn-cash-confirm"
                       onClick={() => handleCashAction("confirm")}
-                      className="type-label-lg touch-target rounded-lg bg-secondary px-space-md text-on-primary shadow-level-3"
+                      className="type-label-lg touch-target rounded-lg px-space-md btn-3d btn-3d--success"
                     >
                       Pago recibido
                     </button>
@@ -824,7 +824,7 @@ export function ChallengeDetailClient({ id }: { id: string }) {
                       disabled={actionBusy}
                       data-testid="btn-cash-default"
                       onClick={() => handleCashAction("default")}
-                      className="type-label-md touch-target rounded-lg bg-error-container px-space-sm text-on-error-container"
+                      className="type-label-md touch-target rounded-lg px-space-sm btn-3d btn-3d--danger-soft"
                     >
                       Reclamar incumplimiento
                     </button>

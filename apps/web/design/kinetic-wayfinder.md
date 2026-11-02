@@ -9,8 +9,8 @@ colors:
   surface-container: '#e8eeff'
   surface-container-high: '#dfe8ff'
   surface-container-highest: '#d7e3ff'
-  on-surface: '#091b37'
-  on-surface-variant: '#3f4753'
+  on-surface: '#4B4B4B'
+  on-surface-variant: '#6B6B6B'
   inverse-surface: '#20304d'
   inverse-on-surface: '#ecf0ff'
   outline: '#707884'
@@ -46,88 +46,90 @@ colors:
   on-tertiary-fixed: '#251a00'
   on-tertiary-fixed-variant: '#5a4300'
   background: '#f9f9ff'
-  on-background: '#091b37'
+  on-background: '#4B4B4B'
   surface-variant: '#d7e3ff'
   sky-cyan: '#33CCFF'
   surface-sky-tint: '#F0F7FF'
   surface-sky-subtle: '#E1F0FF'
   alert-coral: '#FF5722'
-  ink-navy-deep: '#0E1E38'
+  ink-navy-deep: '#4B4B4B'
+  action: '#0099FF'
+  action-base: '#0077CC'
 typography:
   display-lg:
-    fontFamily: Outfit
+    fontFamily: Nunito
     fontSize: 56px
-    fontWeight: '800'
+    fontWeight: '900'
     lineHeight: 64px
     letterSpacing: -0.02em
   display-lg-mobile:
-    fontFamily: Outfit
+    fontFamily: Nunito
     fontSize: 40px
-    fontWeight: '800'
+    fontWeight: '900'
     lineHeight: 48px
     letterSpacing: -0.02em
   display-md:
-    fontFamily: Outfit
+    fontFamily: Nunito
     fontSize: 44px
-    fontWeight: '700'
+    fontWeight: '800'
     lineHeight: 52px
     letterSpacing: -0.015em
   headline-lg:
-    fontFamily: Outfit
+    fontFamily: Nunito
     fontSize: 32px
-    fontWeight: '700'
+    fontWeight: '800'
     lineHeight: 40px
     letterSpacing: -0.01em
   headline-lg-mobile:
-    fontFamily: Outfit
+    fontFamily: Nunito
     fontSize: 28px
-    fontWeight: '700'
+    fontWeight: '800'
     lineHeight: 36px
     letterSpacing: -0.01em
   headline-md:
-    fontFamily: Outfit
+    fontFamily: Nunito
     fontSize: 24px
-    fontWeight: '600'
+    fontWeight: '800'
     lineHeight: 32px
   headline-sm:
-    fontFamily: Outfit
+    fontFamily: Nunito
     fontSize: 20px
-    fontWeight: '600'
+    fontWeight: '800'
     lineHeight: 28px
   title-lg:
-    fontFamily: Outfit
+    fontFamily: Nunito
     fontSize: 18px
-    fontWeight: '600'
+    fontWeight: '800'
     lineHeight: 24px
   body-lg:
-    fontFamily: Manrope
+    fontFamily: Nunito
     fontSize: 16px
-    fontWeight: '500'
+    fontWeight: '600'
     lineHeight: 24px
   body-md:
-    fontFamily: Manrope
+    fontFamily: Nunito
     fontSize: 14px
-    fontWeight: '500'
+    fontWeight: '600'
     lineHeight: 20px
   body-sm:
-    fontFamily: Manrope
+    fontFamily: Nunito
     fontSize: 12px
-    fontWeight: '500'
+    fontWeight: '600'
     lineHeight: 16px
   label-lg:
-    fontFamily: Manrope
+    fontFamily: Nunito
     fontSize: 14px
-    fontWeight: '700'
+    fontWeight: '800'
     lineHeight: 20px
     letterSpacing: 0.02em
   label-md:
-    fontFamily: Manrope
+    fontFamily: Nunito
     fontSize: 12px
-    fontWeight: '700'
+    fontWeight: '800'
     lineHeight: 16px
     letterSpacing: 0.04em
   label-sm:
-    fontFamily: Manrope
+    fontFamily: Nunito
     fontSize: 10px
     fontWeight: '800'
     lineHeight: 14px
@@ -171,14 +173,13 @@ The palette balances day-mode luminescence with high-contrast road legibility:
 - **Named Accents:**
   - `alert-coral` (`#FF5722`): Highlights hazard warnings, traffic stops, and high-priority incident banners.
   - `surface-sky-tint` (`#F0F7FF`) & `surface-sky-subtle` (`#E1F0FF`): Provide tiered background environments that reduce daylight glare while keeping surfaces distinct from pure `#FFFFFF`.
-- **Neutral & Ink Navy (`#182945` / `#0E1E38`):** Form the typographic spine, ensuring all critical navigation copy meets AAA accessibility against bright surfaces.
+- **Neutral Charcoal (`#4B4B4B`) & Ink Navy (`#182945`):** Charcoal `#4B4B4B` is the primary text color (secondary text `#6B6B6B`), ensuring critical copy meets AAA contrast against bright surfaces. Ink Navy `#182945` is kept only for text on saturated yellow and green actions.
 
 ## Typography
 
 Typography prioritizes rapid glanceability:
 
-- **Outfit (Headlines & Display):** Geometric, buoyant, and structural. Its wide apertures and balanced proportions offer character without sacrificing instant recognition. Used for speed readouts, exit indicators, and destination headers.
-- **Manrope (Body & Labels):** Sturdy, neutral, and readable across small footprints. With a solid x-height and clear numerals, it powers distance markers, ETA details, turn-by-turn lists, and compact card metadata.
+- **Nunito (Headlines, Display, Body & Labels):** A single rounded, friendly sans-serif used across the whole interface. Heavy weights (800-900) give titles and figures their playful, chunky character; body copy uses 600 and labels 800. Used for speed readouts, exit indicators, destination headers, distance markers, ETA details and compact card metadata.
 
 ## Layout & Spacing
 
@@ -212,8 +213,14 @@ The design system incorporates roundedness level `2`:
 ## Components
 
 ### Buttons
-- **Primary:** Filled in `#0099FF` with `#FFFFFF` label text, 48px height, 16px radius (`rounded-lg`) or fully pill-shaped for driving modes. In Jetpack Compose styling, interactions provide a slight scale down (`0.98`) and haptic tap response.
-- **Secondary:** Surface background `#F0F7FF`, bordered with a 1.5px stroke of `#0099FF`, ink navy text.
+- **Primary (3D):** Filled in the same bright action blue `#0099FF` used by selected tabs, with `#FFFFFF` label text (about 3:1 contrast, accepted to keep a single blue), 48px minimum height and 16px radius (`rounded-lg`). It rests on a solid 4px base in `#0077CC` (`box-shadow: 0 4px 0`) with no diffuse shadow; on press it sinks 4px and the base disappears.
+- **Success (3D):** Same construction in green `#006E2A` with a darker base.
+- **Secondary / Soft (3D):** White fill, 2px `#BFC7D5` border, gray base and blue text.
+- **Soft danger (3D):** `#FFDAD6` fill with `#93000A` text and a darker rose base.
+- **Disabled:** Flat gray fill `#E1E4EA` with `#9AA0AA` text, no base and no motion.
+- **Create FAB (`+`):** Same `#0099FF` fill and `#0077CC` base as the primary button, with a 6px base and a 64px circle. Reduced motion (`prefers-reduced-motion`) swaps state without animating the sink.
+- **Selected tabs (3D):** The selected tab of the `Monedas / Plata` switch and of the Retos tabs (`En Juego`, `Por Declarar`, `Invitaciones`) uses the primary construction with the same 4px base; unselected tabs stay flat.
+- **Scope:** Only action buttons, the `+` and selected tabs are 3D. Cards, chips, unselected tabs and the rest of the bottom bar stay flat.
 - **Tertiary / Action Badges:** Saturated yellow (`#FFC400`) or road green (`#00C853`) with solid `#182945` typography for high-visibility decisions.
 
 ### Chips & Badges

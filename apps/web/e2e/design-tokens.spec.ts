@@ -155,14 +155,37 @@ test.describe("tipografía: los 14 estilos coinciden con el documento", () => {
   }
 });
 
-test("las dos familias del documento son Outfit y Manrope, y se cargan realmente", async ({ page }) => {
+test("la familia única del documento es Nunito, y se carga realmente", async ({ page }) => {
   const families = new Set(Object.values(spec.typography).map((t) => t.fontFamily));
-  expect([...families].sort()).toEqual(["Manrope", "Outfit"]);
+  expect([...families]).toEqual(["Nunito"]);
 
   const loaded = await page.evaluate(() =>
     [...document.fonts].filter((f) => f.status === "loaded").map((f) => f.family.replace(/["']/g, "")),
   );
-  expect(loaded.join("|")).toMatch(/outfit/i);
-  expect(loaded.join("|")).toMatch(/manrope/i);
+  expect(loaded.join("|")).toMatch(/nunito/i);
   expect(loaded.join("|")).toMatch(/Material Symbols Outlined/);
+});
+
+/** Luminancia relativa WCAG de un color hex "#rrggbb". */
+function luminance(hex: string): number {
+  const [r, g, b] = [1, 3, 5].map((i) => {
+    const c = parseInt(hex.slice(i, i + 2), 16) / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function contrast(a: string, b: string): number {
+  const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+test("el texto principal es #4B4B4B y cumple el contraste sobre el fondo", () => {
+  for (const name of ["on-surface", "on-background", "ink-navy-deep"]) {
+    expect(spec.colors[name].toUpperCase(), name).toBe("#4B4B4B");
+  }
+  expect(spec.colors["on-surface-variant"].toUpperCase()).toBe("#6B6B6B");
+  for (const bg of [spec.colors.surface, spec.colors["surface-sky-tint"], spec.colors["surface-container-lowest"]]) {
+    expect(contrast("#4B4B4B", bg)).toBeGreaterThanOrEqual(7);
+    expect(contrast("#6B6B6B", bg)).toBeGreaterThanOrEqual(4.5);
+  }
 });

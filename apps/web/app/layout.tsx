@@ -1,16 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope, Outfit } from "next/font/google";
+import { Nunito } from "next/font/google";
 import "./globals.css";
 
-// Outfit (títulos y cifras) y Manrope (cuerpo y etiquetas): fuentes variables, autoalojadas.
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
-  display: "swap",
-});
-
-const manrope = Manrope({
-  variable: "--font-manrope",
+// Nunito (títulos, cifras, cuerpo y etiquetas): fuente variable, autoalojada.
+const nunito = Nunito({
+  variable: "--font-nunito",
   subsets: ["latin"],
   display: "swap",
 });
@@ -34,7 +28,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" className={`${outfit.variable} ${manrope.variable} h-full antialiased`}>
+    <html lang="es" className={`${nunito.variable} h-full antialiased`}>
       <body className="min-h-full">{children}</body>
     </html>
   );

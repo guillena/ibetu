@@ -24,7 +24,7 @@ export function SectionPage({ title, description, icon, empty, action }: Section
         {action && (
           <Link
             href={action.href}
-            className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg bg-primary-container px-space-lg text-on-primary shadow-level-3 transition-transform active:scale-[0.98]"
+            className="type-label-lg touch-target inline-flex items-center justify-center rounded-lg px-space-lg btn-3d btn-3d--primary"
           >
             {action.label}
           </Link>

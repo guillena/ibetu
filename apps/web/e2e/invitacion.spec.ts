@@ -113,12 +113,12 @@ test.describe("Página pública de invitación /r/[code] (Task 6.4)", () => {
     await page.locator("#invite-username").fill("lucas_ok");
     await page.getByTestId("invite-register-submit").click();
 
-    expect(registeredPayload).toEqual({
+    await expect.poll(() => registeredPayload).toEqual({
       displayName: "Lucas",
       username: "lucas_ok",
       inviteCode: "CODE777",
     });
-    expect(acceptedChallenge).toBe(true);
+    await expect.poll(() => acceptedChallenge).toBe(true);
 
     // 3. Banner de reto aceptado y generador de Mensaje Inverso para WhatsApp (+50 monedas)
     await expect(page.getByTestId("invite-accepted-banner")).toBeVisible();

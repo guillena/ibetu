@@ -55,7 +55,7 @@ export default async function Image({
           justifyContent: "space-between",
           padding: "56px 64px",
           backgroundColor: "#F0F7FF",
-          color: "#0E1E38",
+          color: "#4B4B4B",
           fontFamily: "sans-serif",
         }}
       >
@@ -87,7 +87,7 @@ export default async function Image({
               style={{
                 fontSize: "44px",
                 fontWeight: 800,
-                color: "#0E1E38",
+                color: "#4B4B4B",
               }}
             >
               I Bet U
@@ -133,7 +133,7 @@ export default async function Image({
               fontSize: "52px",
               fontWeight: 800,
               lineHeight: 1.18,
-              color: "#0E1E38",
+              color: "#4B4B4B",
             }}
           >
             {titleText}

@@ -22,6 +22,17 @@ async function openAmigosEmpty(page: Page) {
   await page.goto("/amigos");
 }
 
+async function openCrear(page: Page) {
+  await page.addInitScript((session) => {
+    window.localStorage.setItem("ibetu:session", JSON.stringify(session));
+  }, MOCK_SESSION);
+  await page.route("**/api/friends", async (route) => {
+    await route.fulfill({ status: 200, contentType: "application/json", body: "[]" });
+  });
+  await page.goto("/crear");
+  await page.getByTestId("block-stake").waitFor();
+}
+
 const cta = (page: Page) => page.getByTestId("friends-empty-state").getByRole("link", { name: "Invitar a un amigo" });
 
 function luminance([r, g, b]: number[]): number {
@@ -139,20 +150,63 @@ test.describe("Botones de acción en 3D", () => {
     await page.mouse.up();
   });
 
-  test("el tab seleccionado de Monedas/Plata es 3D y la base cabe en su contenedor", async ({ page }) => {
+  test("el conmutador del chip es 3D con base de 3 px, mide 48 px y se hunde al presionar", async ({ page }) => {
     await openAmigosEmpty(page);
-    const radio = page.locator('[role="radio"][aria-checked="true"]');
-    const style = await radio.evaluate((el) => {
+    const modo = page.getByRole("switch", { name: "Modo Plata" });
+    const box = (await modo.boundingBox())!;
+    expect(box.width).toBeGreaterThanOrEqual(47.5);
+    expect(box.height).toBeGreaterThanOrEqual(47.5);
+    const face = modo.locator("> span");
+    const style = await face.evaluate((el) => {
       const cs = getComputedStyle(el);
       return { bg: cs.backgroundColor, shadow: cs.boxShadow };
     });
     expect(style.bg).toBe("rgb(0, 153, 255)");
-    expect(style.shadow).toBe("rgb(0, 119, 204) 0px 4px 0px 0px");
-    const box = (await radio.boundingBox())!;
-    const group = (await page.getByRole("radiogroup").boundingBox())!;
-    expect(box.y + box.height + 4).toBeLessThanOrEqual(group.y + group.height);
-    const other = await page.locator('[role="radio"][aria-checked="false"]').evaluate((el) => getComputedStyle(el).boxShadow);
-    expect(other).toBe("none");
+    expect(style.shadow).toBe("rgb(0, 119, 204) 0px 3px 0px 0px");
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await expect.poll(() => face.evaluate((el) => getComputedStyle(el).transform)).toBe("matrix(1, 0, 0, 1, 0, 3)");
+    await page.mouse.up();
+  });
+
+  test("Crear reto: el selector Monedas/Plata es 3D (seleccionado azul, otro blanco con borde)", async ({ page }) => {
+    await openCrear(page);
+    const read = (id: string) =>
+      page.getByTestId(id).evaluate((el) => {
+        const cs = getComputedStyle(el);
+        return { bg: cs.backgroundColor, shadow: cs.boxShadow };
+      });
+    const coins = await read("form-mode-coins");
+    expect(coins.bg).toBe("rgb(0, 153, 255)");
+    expect(coins.shadow).toBe("rgb(0, 119, 204) 0px 4px 0px 0px");
+    const cash = await read("form-mode-cash");
+    expect(cash.bg).toBe("rgb(255, 255, 255)");
+    expect(cash.shadow).toBe("rgb(191, 199, 213) 0px 4px 0px 0px");
+    await page.getByTestId("form-mode-cash").click();
+    expect((await read("form-mode-cash")).bg).toBe("rgb(0, 153, 255)");
+    expect((await read("form-mode-coins")).bg).toBe("rgb(255, 255, 255)");
+  });
+
+  test("Crear reto arranca con el último modo usado y su monto por defecto", async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.setItem("ibetu:mode", "CASH"));
+    await openCrear(page);
+    await expect(page.getByTestId("form-mode-cash")).toHaveAttribute("aria-pressed", "true");
+    await expect(page.locator("#challenge-stake")).toHaveValue("1000");
+    // El conmutador del header está en el mismo modo (un solo estado).
+    await expect(page.getByRole("switch", { name: "Modo Plata" })).toHaveAttribute("aria-checked", "true");
+    await page.getByTestId("form-mode-coins").click();
+    await expect(page.locator("#challenge-stake")).toHaveValue("10");
+    await expect(page.getByRole("switch", { name: "Modo Plata" })).toHaveAttribute("aria-checked", "false");
+  });
+
+  test("el header no desborda a 360 px con el modo en Plata", async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.setItem("ibetu:mode", "CASH"));
+    await openAmigosEmpty(page);
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
+    expect(overflow).toBe(false);
+    const header = (await page.locator("header").boundingBox())!;
+    const items = await page.locator("header a, header button").evaluateAll((els) => els.map((e) => e.getBoundingClientRect().right));
+    for (const right of items) expect(right).toBeLessThanOrEqual(header.width + 0.5);
   });
 
   test("las tarjetas siguen planas, sin base 3D", async ({ page }) => {

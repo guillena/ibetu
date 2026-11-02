@@ -219,7 +219,9 @@ The design system incorporates roundedness level `2`:
 - **Soft danger (3D):** `#FFDAD6` fill with `#93000A` text and a darker rose base.
 - **Disabled:** Flat gray fill `#E1E4EA` with `#9AA0AA` text, no base and no motion.
 - **Create FAB (`+`):** Same `#0099FF` fill and `#0077CC` base as the primary button, with a 6px base and a 64px circle. Reduced motion (`prefers-reduced-motion`) swaps state without animating the sink.
-- **Selected tabs (3D):** The selected tab of the `Monedas / Plata` switch and of the Retos tabs (`En Juego`, `Por Declarar`, `Invitaciones`) uses the primary construction with the same 4px base; unselected tabs stay flat.
+- **Selected tabs (3D):** The selected tab of the Retos tabs (`En Juego`, `Por Declarar`, `Invitaciones`) uses the primary construction with the same 4px base; unselected tabs stay flat.
+- **Currency mode picker (Crear reto):** Two 3D buttons side by side, `Monedas` and `Plata`: the selected one in `#0099FF` (primary), the other as soft (white, 2px `#BFC7D5` border and gray base).
+- **Header balance chip with mode switch:** The top bar is a single row (mascot, chip, profile; the "I Bet U" word is hidden below 400px). The chip has two parts: the balance (amber `#FFDF99`, icon plus amount, or "Amigos" in cash mode) which links to the wallet, and a 36px round 3D switch (`#0099FF` with a 3px `#0077CC` base inside a 48px hit area) showing the icon of the other mode; it toggles `Monedas` / `Plata` and is exposed as a switch.
 - **Scope:** Only action buttons, the `+` and selected tabs are 3D. Cards, chips, unselected tabs and the rest of the bottom bar stay flat.
 - **Tertiary / Action Badges:** Saturated yellow (`#FFC400`) or road green (`#00C853`) with solid `#182945` typography for high-visibility decisions.
 

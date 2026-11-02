@@ -95,8 +95,8 @@ test.describe("estructura y estilo", () => {
       const bg = (sel: string) => getComputedStyle(document.querySelector(sel)!).backgroundColor;
       return {
         body: bg("body"),
-        activeRadio: bg('[role="radio"][aria-checked="true"]'),
-        chip: bg('[data-testid="balance-chip"]'),
+        activeRadio: bg('[data-testid="mode-switch"] > span'),
+        chip: bg('[data-testid="balance-link"] > span'),
         fab: bg('nav a[aria-label="Crear reto"]'),
         activeNavPill: bg('nav a[aria-current="page"] span'),
       };
@@ -125,14 +125,19 @@ test.describe("estructura y estilo", () => {
 });
 
 test.describe("encabezado", () => {
-  test("queda fijo arriba con marca, saldo, perfil y el switch de modo", async ({ page }) => {
+  test("queda fijo arriba, en una sola fila, con marca, saldo, conmutador de modo y perfil", async ({ page }) => {
     const header = await box(page, "header");
     expect(header.y).toBeCloseTo(0, 0);
-    await expect(page.locator("header").getByText("I Bet U")).toBeVisible();
+    // Por debajo de 400 px la palabra se oculta y queda el dado de la mascota como marca.
+    const wordmark = page.locator("header").getByText("I Bet U");
+    if ((page.viewportSize()?.width ?? 0) >= 400) await expect(wordmark).toBeVisible();
+    else await expect(page.getByRole("link", { name: /I Bet U, ir a Retos/ })).toBeVisible();
     await expect(page.getByTestId("balance-chip")).toBeVisible();
     await expect(page.getByRole("link", { name: /Mi perfil/ })).toBeVisible();
-    await expect(page.getByRole("radiogroup", { name: "Modo de juego" })).toBeVisible();
-    await expect(page.getByRole("radio")).toHaveCount(2);
+    await expect(page.getByRole("switch", { name: "Modo Plata" })).toBeVisible();
+    await expect(page.getByRole("radiogroup")).toHaveCount(0);
+    // Una sola fila: ya no hay un switch a todo el ancho debajo de la marca.
+    expect(header.height).toBeLessThan(80);
 
     // Sigue pegado arriba aunque se haga scroll.
     await page.evaluate(() => {
@@ -149,40 +154,45 @@ test.describe("encabezado", () => {
     await expect(page.getByTestId("balance-chip")).not.toContainText(/\d/);
   });
 
-  test("Monedas es el modo inicial y el switch cambia a Plata", async ({ page }) => {
-    const monedas = page.getByRole("radio", { name: "Monedas" });
-    const plata = page.getByRole("radio", { name: "Plata" });
-    await expect(monedas).toHaveAttribute("aria-checked", "true");
-    await expect(plata).toHaveAttribute("aria-checked", "false");
+  test("Monedas es el modo inicial y el conmutador cambia a Plata", async ({ page }) => {
+    const modo = page.getByRole("switch", { name: "Modo Plata" });
+    await expect(modo).toHaveAttribute("aria-checked", "false");
 
-    await plata.click();
-    await expect(plata).toHaveAttribute("aria-checked", "true");
-    await expect(monedas).toHaveAttribute("aria-checked", "false");
+    await modo.click();
+    await expect(modo).toHaveAttribute("aria-checked", "true");
     // En Plata no hay saldo que custodiar: el acuerdo es directo entre amigos.
-    await expect(page.getByTestId("balance-chip")).toContainText("Entre amigos");
+    await expect(page.getByTestId("balance-chip")).toContainText("Amigos");
 
-    await monedas.click();
+    await modo.click();
+    await expect(modo).toHaveAttribute("aria-checked", "false");
     await expect(page.getByTestId("balance-chip")).toContainText("—");
   });
 
-  test("el modo elegido se recuerda al recargar y al cambiar de pantalla", async ({ page }) => {
-    await page.getByRole("radio", { name: "Plata" }).click();
-    await page.reload();
-    await expect(page.getByRole("radio", { name: "Plata" })).toHaveAttribute("aria-checked", "true");
-    await page.getByRole("link", { name: "Monedero" }).click();
+  test("el saldo lleva al Monedero sin cambiar el modo", async ({ page }) => {
+    await page.getByRole("switch", { name: "Modo Plata" }).click();
+    await page.getByTestId("balance-link").click();
     await expect(page).toHaveURL(/\/monedero$/);
-    await expect(page.getByRole("radio", { name: "Plata" })).toHaveAttribute("aria-checked", "true");
+    await expect(page.getByRole("switch", { name: "Modo Plata" })).toHaveAttribute("aria-checked", "true");
   });
 
-  test("el switch se maneja con el teclado (flechas) y mueve el foco", async ({ page }) => {
-    const monedas = page.getByRole("radio", { name: "Monedas" });
-    await monedas.focus();
-    await page.keyboard.press("ArrowRight");
-    await expect(page.getByRole("radio", { name: "Plata" })).toHaveAttribute("aria-checked", "true");
-    await expect(page.getByRole("radio", { name: "Plata" })).toBeFocused();
-    await page.keyboard.press("ArrowLeft");
-    await expect(monedas).toHaveAttribute("aria-checked", "true");
-    await expect(monedas).toBeFocused();
+  test("el modo elegido se recuerda al recargar y al cambiar de pantalla", async ({ page }) => {
+    await page.getByRole("switch", { name: "Modo Plata" }).click();
+    await page.reload();
+    await expect(page.getByRole("switch", { name: "Modo Plata" })).toHaveAttribute("aria-checked", "true");
+    await page.getByRole("link", { name: "Monedero", exact: true }).click();
+    await expect(page).toHaveURL(/\/monedero$/);
+    await expect(page.getByRole("switch", { name: "Modo Plata" })).toHaveAttribute("aria-checked", "true");
+  });
+
+  test("el conmutador se maneja con el teclado (Espacio y Enter) y conserva el foco", async ({ page }) => {
+    const modo = page.getByRole("switch", { name: "Modo Plata" });
+    await modo.focus();
+    await page.keyboard.press("Space");
+    await expect(modo).toHaveAttribute("aria-checked", "true");
+    await expect(modo).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(modo).toHaveAttribute("aria-checked", "false");
+    await expect(modo).toBeFocused();
   });
 
   test("el acceso al perfil lleva a /perfil", async ({ page }) => {
@@ -228,8 +238,6 @@ test.describe("navegación inferior", () => {
     const fab = sizes.find((s) => s.name === "Crear reto")!;
     expect(fab.w).toBeGreaterThanOrEqual(64 - 0.5);
     expect(fab.h).toBeGreaterThanOrEqual(64 - 0.5);
-    const radios = await page.getByRole("radio").evaluateAll((els) => els.map((el) => el.getBoundingClientRect().height));
-    for (const h of radios) expect(h).toBeGreaterThanOrEqual(47.5);
   });
 
   test("navegar marca la sección activa (aria-current) y conserva la estructura", async ({ page }) => {
@@ -316,7 +324,7 @@ test.describe("responsive", () => {
   });
 
   test("aun con el chip de Plata (más largo) la fila de marca entra en pantalla", async ({ page }) => {
-    await page.getByRole("radio", { name: "Plata" }).click();
+    await page.getByRole("switch", { name: "Modo Plata" }).click();
     const rects = await page.evaluate(() => {
       const r = (el: Element) => el.getBoundingClientRect();
       return {
@@ -335,13 +343,22 @@ test.describe("responsive", () => {
 
 test.describe("identidad de marca: mascota", () => {
   test("el encabezado muestra la mascota, con texto alternativo y área táctil de 48 px", async ({ page }) => {
-    const mascot = page.locator("header").getByAltText("Mascota de I Bet U");
+    const mascot = page.locator("header").getByAltText("Dadi, la mascota de I Bet U");
     await expect(mascot).toBeVisible();
     await expect.poll(() => mascot.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true);
     const link = await box(page, 'header a[aria-label="I Bet U, ir a Retos"]');
     expect(link.width).toBeGreaterThanOrEqual(47.5);
     expect(link.height).toBeGreaterThanOrEqual(47.5);
     await expect(page.getByRole("link", { name: /I Bet U, ir a Retos/ })).toHaveAttribute("href", "/");
+  });
+
+  test("el nombre Dadi solo está en el texto alternativo y nunca se imprime en pantalla", async ({ page }) => {
+    for (const href of ALL_PAGES) {
+      await page.goto(href);
+      await expect(page.locator("header").getByRole("img", { name: "Dadi, la mascota de I Bet U" })).toBeVisible();
+      const text = await page.evaluate(() => document.body.innerText);
+      expect(text, `texto de ${href}`).not.toMatch(/Dadi/);
+    }
   });
 
   test("el favicon y el ícono de pantalla de inicio se declaran y responden 200", async ({ page, request }) => {
@@ -367,9 +384,9 @@ test("capturas de pantalla para revisión visual", async ({ page }, testInfo) =>
   fs.mkdirSync(dir, { recursive: true });
   const shot = (name: string) => page.screenshot({ path: path.join(dir, `${testInfo.project.name}-${name}.png`) });
   await shot("retos-monedas");
-  await page.getByRole("radio", { name: "Plata" }).click();
+  await page.getByRole("switch", { name: "Modo Plata" }).click();
   await shot("retos-plata");
-  await page.getByRole("link", { name: "Monedero" }).click();
+  await page.getByRole("link", { name: "Monedero", exact: true }).click();
   await shot("monedero-plata");
   expect(fs.existsSync(path.join(dir, `${testInfo.project.name}-retos-monedas.png`))).toBe(true);
 });

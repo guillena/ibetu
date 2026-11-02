@@ -99,6 +99,8 @@ test.describe("Página pública de invitación /r/[code] (Task 6.4)", () => {
 
     // 1. Muestra los datos de la invitación
     await expect(page.getByTestId("invite-card")).toBeVisible();
+    // La mascota de la marca se anuncia con su nombre en el texto alternativo.
+    await expect(page.getByRole("img", { name: "Dadi, la mascota de I Bet U" })).toBeVisible();
     await expect(page.getByTestId("invite-creator")).toContainText("Ana (@ana_ok)");
     await expect(page.getByTestId("invite-title")).toContainText(
       "¿A que no embocás el papel en el cesto de 5 metros?",

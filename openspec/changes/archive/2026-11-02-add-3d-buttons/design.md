@@ -22,7 +22,7 @@ Los botones se escriben en línea con clases Tailwind (`bg-primary-container tex
 5. **Desactivado.** Relleno gris `#E1E4EA`, texto `#9AA0AA`, sin base y `pointer-events: none`.
 6. **Movimiento reducido.** Bajo `@media (prefers-reduced-motion: reduce)` se elimina la transición, no el cambio de estado.
 7. **Migración mecánica.** Se sustituyen las clases en línea por `Button` o por `.btn-3d`. Se retira `active:scale-[0.98]`.
-8. **Tabs seleccionados en 3D.** `CurrencySwitch` (`radiogroup` de 56 px con tabs de 48 px) y las pestañas de `RetosFeed` aplican `.btn-3d btn-3d--primary` solo al seleccionado; el resto conserva su aspecto plano. El contenedor gana espacio inferior para contener la base de 4 px (sin recortarla con `overflow`). Se mantienen `role`, `aria-checked` y `data-testid`.
+8. **Tabs seleccionados en 3D.** Las pestañas de `RetosFeed` (y, hasta el cambio `compact-currency-switch`, el `CurrencySwitch`, hoy reemplazado por el chip conmutador) aplican `.btn-3d btn-3d--primary` solo al seleccionado; el resto conserva su aspecto plano. El contenedor gana espacio inferior para contener la base de 4 px (sin recortarla con `overflow`). Se mantienen `role`, `aria-checked` y `data-testid`.
 
 ## Risks / Trade-offs
 

@@ -3,8 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Icon } from "@/components/ui/Icon";
+import { MASCOT_ALT } from "@/lib/brand";
 import { BalanceChip } from "./BalanceChip";
-import { CurrencySwitch } from "./CurrencySwitch";
 import { useShell } from "./shell-context";
 import type { FairPlayBand } from "./shell-context";
 
@@ -14,7 +14,7 @@ const BAND_STYLE: Record<FairPlayBand, string> = {
   RED: "bg-alert-coral text-on-primary",
 };
 
-/** Barra superior fija: marca, saldo, acceso al perfil (con su % Fair Play) y modo de juego. */
+/** Barra superior fija: marca, saldo con conmutador de modo y acceso al perfil (con su % Fair Play). */
 export function AppHeader() {
   const { fairPlay } = useShell();
 
@@ -25,13 +25,13 @@ export function AppHeader() {
           <Link href="/" aria-label="I Bet U, ir a Retos" className="flex touch-target items-center gap-space-xs">
             <Image
               src="/brand/mascot.png"
-              alt="Mascota de I Bet U"
+              alt={MASCOT_ALT}
               width={40}
               height={40}
               priority
               className="h-10 w-10 object-contain drop-shadow-sm"
             />
-            <span className="type-headline-sm leading-none text-ink-navy-deep">I Bet U</span>
+            <span className="type-headline-sm hidden leading-none text-ink-navy-deep min-[400px]:inline">I Bet U</span>
           </Link>
 
           <div className="flex items-center gap-space-xs">
@@ -54,10 +54,6 @@ export function AppHeader() {
               )}
             </Link>
           </div>
-        </div>
-
-        <div className="flex h-16 items-center px-margin">
-          <CurrencySwitch />
         </div>
       </div>
     </header>

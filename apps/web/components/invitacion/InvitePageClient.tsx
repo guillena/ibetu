@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { MascotImage } from "@/components/ui/EmptyState";
+import { MASCOT_ALT } from "@/lib/brand";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Icon } from "@/components/ui/Icon";
@@ -241,7 +242,7 @@ export function InvitePageClient({
         <Link href="/" className="flex items-center gap-space-xs">
           <Image
             src="/brand/mascot.png"
-            alt="Mascota de I Bet U"
+            alt={MASCOT_ALT}
             width={40}
             height={40}
             priority

@@ -1,8 +1,9 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/Button";
+import { MASCOT_ALT } from "@/lib/brand";
 
 const CHARACTERS = {
-  dadi: { src: "/brand/characters/dadi.webp", alt: "Dadi, la mascota de I Bet U" },
+  dadi: { src: "/brand/characters/dadi.webp", alt: MASCOT_ALT },
   oso: { src: "/brand/characters/oso.webp", alt: "Oso, dado marrón con orejas y gorra azul" },
   buho: { src: "/brand/characters/buho.webp", alt: "Búho, dado violeta con alitas y penachos" },
   zorro: { src: "/brand/characters/zorro.webp", alt: "Zorro, dado terracota con orejas y cola" },

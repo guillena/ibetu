@@ -51,10 +51,10 @@ El botón central `+` de la barra inferior SHALL usar el estilo 3D con una base 
 - **THEN** su relleno es `#0099FF` y su base es `#0077CC`, igual que el tab seleccionado y el botón principal
 
 ### Requirement: Tabs seleccionados en 3D
-El tab seleccionado del switch `Monedas / Plata` y de las pestañas de Retos SHALL tener relleno `#0099FF` y la misma base de 4 px y hundimiento al presionar que los botones, sin que la base desborde su contenedor; los tabs no seleccionados MUST mantenerse planos.
+El tab seleccionado de las pestañas de Retos (`En Juego`, `Por Declarar` e `Invitaciones`) SHALL tener relleno `#0099FF` y la misma base de 4 px y hundimiento al presionar que los botones, sin que la base desborde su contenedor; los tabs no seleccionados MUST mantenerse planos.
 
 #### Scenario: Tab seleccionado
-- **WHEN** el usuario selecciona `Monedas`, `Plata`, `En Juego`, `Por Declarar` o `Invitaciones`
+- **WHEN** el usuario selecciona `En Juego`, `Por Declarar` o `Invitaciones`
 - **THEN** el tab activo muestra el relleno `#0099FF` con base `#0077CC` de 4 px y su contenedor la contiene sin recortarla
 
 #### Scenario: Tab no seleccionado
@@ -62,7 +62,7 @@ El tab seleccionado del switch `Monedas / Plata` y de las pestañas de Retos SHA
 - **THEN** se muestra plano, sin base 3D
 
 ### Requirement: Alcance del estilo 3D
-El estilo 3D SHALL aplicarse solo a los botones de acción, al `+` y a los tabs seleccionados; las tarjetas, los chips, los tabs no seleccionados y el resto de la barra inferior MUST mantenerse planos.
+El estilo 3D SHALL aplicarse solo a los botones de acción, al `+`, a los tabs seleccionados de Retos, al conmutador de modo del header y a los botones del selector de apuesta de `Crear Reto`; las tarjetas, los chips, los tabs no seleccionados y el resto de la barra inferior MUST mantenerse planos.
 
 #### Scenario: Tarjetas sin cambios
 - **WHEN** se muestra una tarjeta

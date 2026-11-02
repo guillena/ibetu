@@ -268,7 +268,7 @@
 :root {
   color-scheme: light; /* diseño pensado para luz de día: no hay modo oscuro */
   /* Alto de la barra superior (fila de marca de 56 px + fila del switch de 64 px) y de la navegación inferior. */
-  --shell-header-h: 7.5rem;
+  --shell-header-h: 3.5rem;
   --shell-nav-h: 4.5rem;
   /* Ancho de la columna de la app: el celular es el dispositivo principal. */
   --shell-max-w: 30rem;
@@ -338,6 +338,17 @@ body {
 }
 .btn-3d--fab {
   --btn-depth: 6px;
+}
+.btn-3d--mini {
+  --btn-depth: 3px;
+}
+/* Botón de 48 px cuya cara 3D es un hijo: al presionar el botón se hunde la cara. */
+.btn-3d-host {
+  cursor: pointer;
+}
+.btn-3d-host:active:not(:disabled) > .btn-3d {
+  transform: translateY(var(--btn-depth));
+  box-shadow: 0 0 0 var(--btn-base);
 }
 .btn-3d:disabled,
 .btn-3d[aria-disabled="true"] {

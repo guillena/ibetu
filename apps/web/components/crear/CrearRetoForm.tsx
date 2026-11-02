@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { InstantAuthCard } from "@/components/auth/InstantAuthCard";
 import { useShell, type CurrencyMode } from "@/components/shell/shell-context";
@@ -80,7 +81,9 @@ export function CrearRetoForm() {
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
 
   // Bloque 3: Apuesta y vencimiento
-  const [stakeInput, setStakeInput] = useState<string>("10");
+  // Monto que escribió o tocó el usuario; mientras no toque nada, rige el monto por defecto del modo guardado.
+  const [stakeEdit, setStakeEdit] = useState<string | null>(null);
+  const stakeInput = stakeEdit ?? (mode === "COINS" ? "10" : "1000");
   const [durationHours, setDurationHours] = useState<number | "CUSTOM">(48);
   const [customExpiresAt, setCustomExpiresAt] = useState<string>("");
 
@@ -117,7 +120,7 @@ export function CrearRetoForm() {
 
   function handleModeChange(nextMode: CurrencyMode) {
     setMode(nextMode);
-    setStakeInput(nextMode === "COINS" ? "10" : "1000");
+    setStakeEdit(null);
     setError(null);
   }
 
@@ -485,36 +488,25 @@ export function CrearRetoForm() {
             </h2>
           </div>
 
-          <div className="grid grid-cols-2 gap-1 rounded-full bg-surface-sky-tint p-1">
-            <button
-              type="button"
+          <div className="grid grid-cols-2 gap-space-sm pb-1">
+            <Button
               data-testid="form-mode-coins"
               aria-pressed={mode === "COINS"}
+              variant={mode === "COINS" ? "primary" : "soft"}
               onClick={() => handleModeChange("COINS")}
-              className={`type-label-md touch-target flex items-center justify-center gap-1 rounded-full transition-colors ${
-                mode === "COINS"
-                  ? "bg-primary-container text-on-primary shadow-level-3"
-                  : "text-ink-navy-deep"
-              }`}
             >
               <Icon name="paid" filled={mode === "COINS"} size={18} />
               <span>Monedas</span>
-            </button>
-
-            <button
-              type="button"
+            </Button>
+            <Button
               data-testid="form-mode-cash"
               aria-pressed={mode === "CASH"}
+              variant={mode === "CASH" ? "primary" : "soft"}
               onClick={() => handleModeChange("CASH")}
-              className={`type-label-md touch-target flex items-center justify-center gap-1 rounded-full transition-colors ${
-                mode === "CASH"
-                  ? "bg-primary-container text-on-primary shadow-level-3"
-                  : "text-ink-navy-deep"
-              }`}
             >
               <Icon name="payments" filled={mode === "CASH"} size={18} />
               <span>Plata</span>
-            </button>
+            </Button>
           </div>
 
           <div className="flex flex-wrap gap-1.5">
@@ -526,7 +518,7 @@ export function CrearRetoForm() {
                   type="button"
                   data-testid={`stake-pill-${val}`}
                   onClick={() => {
-                    setStakeInput(String(val));
+                    setStakeEdit(String(val));
                     setError(null);
                   }}
                   className={`type-label-md touch-target flex-1 rounded-md px-3 transition-colors ${
@@ -559,7 +551,7 @@ export function CrearRetoForm() {
               step={1}
               value={stakeInput}
               onChange={(e) => {
-                setStakeInput(e.target.value);
+                setStakeEdit(e.target.value);
                 setError(null);
               }}
               className="type-body-md mt-1 w-full rounded-md bg-surface-sky-tint px-space-sm py-2.5 text-ink-navy-deep focus:outline-2 focus:outline-primary-container"

@@ -118,7 +118,10 @@ export function ShellProvider({ children }: { children: ReactNode }) {
   const fairPlay =
     fairPlayOverride ??
     (session
-      ? { score: session.user.credibilityScore, band: session.user.credibilityStatus }
+      ? {
+          score: session.user.credibilityScore ?? 100,
+          band: session.user.credibilityStatus ?? "GREEN",
+        }
       : null);
 
   const value = useMemo(

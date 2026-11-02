@@ -47,9 +47,9 @@ export function AppHeader() {
               {fairPlay && (
                 <span
                   data-testid="fair-play-badge"
-                  className={`type-label-sm absolute right-0 bottom-0.5 rounded-full px-1.5 py-0.5 ${BAND_STYLE[fairPlay.band]}`}
+                  className={`type-label-sm absolute right-0 bottom-0.5 rounded-full px-1.5 py-0.5 ${BAND_STYLE[fairPlay.band] ?? BAND_STYLE.GREEN}`}
                 >
-                  {fairPlay.score}
+                  {fairPlay.score ?? 100}
                 </span>
               )}
             </Link>

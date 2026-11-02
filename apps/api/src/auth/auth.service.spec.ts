@@ -32,6 +32,8 @@ describe('AuthService.instantRegister', () => {
       displayName: 'Guille',
       username: 'guille_k',
       coinsAvailable: BONUS_INIT_COINS,
+      credibilityScore: 100,
+      credibilityStatus: 'GREEN',
       whatsappLinked: false,
     });
     expect(userCreate).toHaveBeenCalledWith({

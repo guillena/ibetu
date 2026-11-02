@@ -7,6 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { bandOf, type CredibilityBand } from '../credibility/credibility.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { RedisService } from '../redis/redis.service.js';
 
@@ -28,6 +29,8 @@ export interface InstantRegisterResult {
     displayName: string;
     username: string;
     coinsAvailable: number;
+    credibilityScore: number;
+    credibilityStatus: CredibilityBand;
     whatsappLinked: boolean;
   };
 }
@@ -86,6 +89,7 @@ export class AuthService {
       sub: user.id,
       username: user.username,
     });
+    const score = user.credibilityScore ?? 100;
     return {
       accessToken,
       user: {
@@ -93,6 +97,8 @@ export class AuthService {
         displayName: user.displayName,
         username: user.username,
         coinsAvailable: user.coinsAvailable,
+        credibilityScore: score,
+        credibilityStatus: bandOf(score),
         whatsappLinked: Boolean(user.whatsappPhone),
       },
     };
@@ -168,6 +174,7 @@ export class AuthService {
       sub: user.id,
       username: user.username,
     });
+    const score = user.credibilityScore ?? 100;
 
     return {
       accessToken,
@@ -176,6 +183,8 @@ export class AuthService {
         displayName: user.displayName,
         username: user.username,
         coinsAvailable: user.coinsAvailable,
+        credibilityScore: score,
+        credibilityStatus: bandOf(score),
         whatsappLinked: Boolean(user.whatsappPhone),
       },
     };

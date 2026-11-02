@@ -210,8 +210,8 @@ export function RetosFeed({ initialData }: { initialData?: OpenChallengeList }) 
     }
   }
 
-  const effectiveFairPlay = fairPlay ?? { score: 100, band: "GREEN" as FairPlayBand };
-  const bandMeta = BAND_META[effectiveFairPlay.band];
+  const effectiveFairPlay = { score: fairPlay?.score ?? 100, band: fairPlay?.band ?? ("GREEN" as FairPlayBand) };
+  const bandMeta = BAND_META[effectiveFairPlay.band] ?? BAND_META.GREEN;
   const totalInvitations =
     data.counts.invitationsReceived + data.counts.invitationsSent;
 

@@ -169,8 +169,8 @@ export function InvitePageClient({
             username: reg.user.username,
             displayName: reg.user.displayName,
             credibility: {
-              score: reg.user.credibilityScore,
-              band: reg.user.credibilityStatus,
+              score: reg.user.credibilityScore ?? 100,
+              band: reg.user.credibilityStatus ?? "GREEN",
               provisional: true,
             },
           },

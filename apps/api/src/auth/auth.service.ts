@@ -351,7 +351,16 @@ export class AuthService {
     idToken: string,
     displayNameHint?: string,
   ): Promise<VerifiedOAuthIdentity> {
-    if (idToken.startsWith('dev:') && process.env.NODE_ENV !== 'production') {
+    const configuredClientId =
+      provider === 'GOOGLE'
+        ? process.env.GOOGLE_CLIENT_ID?.trim()
+        : process.env.APPLE_CLIENT_ID?.trim();
+    const allowDevToken =
+      process.env.NODE_ENV !== 'production' ||
+      process.env.OAUTH_ALLOW_DEV_TOKENS === 'true' ||
+      !configuredClientId;
+
+    if (idToken.startsWith('dev:') && allowDevToken) {
       const parts = idToken.split(':');
       // Soporta `dev:GOOGLE:sub123:mail@test.com:Nombre` o `dev:sub123:mail@test.com:Nombre`
       const hasProviderPrefix =

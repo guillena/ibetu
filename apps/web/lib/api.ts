@@ -103,9 +103,20 @@ export interface ProfileView {
 }
 
 export function buildDevOAuthToken(provider: OAuthProvider): string {
-  const email =
-    provider === "GOOGLE" ? "jugador@gmail.com" : "jugador@icloud.com";
-  return `dev:${provider}:sub_${provider.toLowerCase()}:${email}:Jugador`;
+  const domain = provider === "GOOGLE" ? "gmail.com" : "icloud.com";
+  if (typeof window !== "undefined") {
+    const customToken = window.localStorage.getItem("ibetu:dev_oauth_token");
+    if (customToken) return customToken;
+
+    const storageKey = `ibetu:dev_oauth_sub_${provider.toLowerCase()}`;
+    let deviceId = window.localStorage.getItem(storageKey);
+    if (!deviceId) {
+      deviceId = Math.random().toString(36).slice(2, 8);
+      window.localStorage.setItem(storageKey, deviceId);
+    }
+    return `dev:${provider}:sub_${provider.toLowerCase()}_${deviceId}:jugador.${deviceId}@${domain}:Jugador`;
+  }
+  return `dev:${provider}:sub_${provider.toLowerCase()}:jugador@${domain}:Jugador`;
 }
 
 export async function verifyOAuth(

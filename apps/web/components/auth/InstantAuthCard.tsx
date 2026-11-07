@@ -1,13 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useShell } from "@/components/shell/shell-context";
 import { MascotImage } from "@/components/ui/EmptyState";
 import { Icon } from "@/components/ui/Icon";
 import {
   ApiError,
+  buildOAuthTokenForEmail,
   completeOAuthProfile,
+  getKnownOAuthAccounts,
+  type KnownOAuthAccount,
+  normalizeOAuthEmail,
   type OAuthProvider,
+  saveKnownOAuthAccount,
   saveStoredSession,
   type StoredSession,
   verifyOAuth,
@@ -41,6 +46,11 @@ export function InstantAuthCard({
 }: InstantAuthCardProps) {
   const { setSession } = useShell();
 
+  const [selectedProvider, setSelectedProvider] =
+    useState<OAuthProvider | null>(null);
+  const [accountEmail, setAccountEmail] = useState("");
+  const [knownAccounts, setKnownAccounts] = useState<KnownOAuthAccount[]>([]);
+
   const [pendingOnboarding, setPendingOnboarding] =
     useState<PendingOnboarding | null>(null);
   const [displayName, setDisplayName] = useState("");
@@ -52,18 +62,64 @@ export function InstantAuthCard({
   );
   const [submittingProfile, setSubmittingProfile] = useState(false);
 
-  async function handleSelectProvider(provider: OAuthProvider) {
+  useEffect(() => {
+    setKnownAccounts(getKnownOAuthAccounts());
+  }, []);
+
+  function handleOpenProviderSelector(provider: OAuthProvider) {
     setError(null);
     setSuggestions([]);
-    setLoadingProvider(provider);
+    setSelectedProvider(provider);
+    const providerAccounts = getKnownOAuthAccounts(provider);
+    setKnownAccounts(getKnownOAuthAccounts());
+    if (providerAccounts.length > 0 && !accountEmail) {
+      setAccountEmail(providerAccounts[0].email);
+    }
+  }
 
+  async function handleVerifyWithEmail(
+    provider: OAuthProvider,
+    rawEmail: string,
+    displayNameHint?: string,
+  ) {
+    setError(null);
+    setSuggestions([]);
+
+    const normalizedEmail = normalizeOAuthEmail(provider, rawEmail);
+    if (
+      !normalizedEmail ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+    ) {
+      setError(
+        provider === "GOOGLE"
+          ? "Ingresá tu correo de Google (ej: guillena@gmail.com)."
+          : "Ingresá tu correo de Apple (ej: guillena@icloud.com).",
+      );
+      return;
+    }
+
+    setLoadingProvider(provider);
     try {
-      const res = await verifyOAuth(provider);
+      const idToken = buildOAuthTokenForEmail(
+        provider,
+        normalizedEmail,
+        displayNameHint,
+      );
+      const res = await verifyOAuth(provider, idToken, displayNameHint);
       if (res.status === "AUTHENTICATED") {
         const session: StoredSession = {
           accessToken: res.accessToken,
-          user: res.user,
+          user: {
+            ...res.user,
+            email: res.user.email ?? normalizedEmail,
+          },
         };
+        saveKnownOAuthAccount({
+          provider,
+          email: session.user.email ?? normalizedEmail,
+          displayName: session.user.displayName,
+          username: session.user.username,
+        });
         saveStoredSession(session);
         setSession(session);
         onSuccess?.(session);
@@ -73,7 +129,7 @@ export function InstantAuthCard({
       setPendingOnboarding({
         onboardingToken: res.onboardingToken,
         provider: res.provider,
-        email: res.email,
+        email: res.email || normalizedEmail,
       });
       setDisplayName(res.suggestedDisplayName);
       setUsername(res.suggestedUsername);
@@ -86,6 +142,12 @@ export function InstantAuthCard({
     } finally {
       setLoadingProvider(null);
     }
+  }
+
+  async function handleSubmitEmailForm(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedProvider) return;
+    await handleVerifyWithEmail(selectedProvider, accountEmail);
   }
 
   async function handleConfirmProfile(e: React.FormEvent) {
@@ -111,11 +173,24 @@ export function InstantAuthCard({
 
     setSubmittingProfile(true);
     try {
-      const session = await completeOAuthProfile({
+      const res = await completeOAuthProfile({
         onboardingToken: pendingOnboarding.onboardingToken,
         displayName: cleanName,
         username: cleanUser,
         ...(inviteCode ? { inviteCode } : {}),
+      });
+      const session: StoredSession = {
+        accessToken: res.accessToken,
+        user: {
+          ...res.user,
+          email: res.user.email ?? pendingOnboarding.email,
+        },
+      };
+      saveKnownOAuthAccount({
+        provider: pendingOnboarding.provider,
+        email: pendingOnboarding.email,
+        displayName: session.user.displayName,
+        username: session.user.username,
       });
       saveStoredSession(session);
       setSession(session);
@@ -136,6 +211,8 @@ export function InstantAuthCard({
   }
 
   if (pendingOnboarding) {
+    const providerLabel =
+      pendingOnboarding.provider === "GOOGLE" ? "Google" : "Apple";
     return (
       <section
         data-testid="oauth-confirm-profile-card"
@@ -151,8 +228,11 @@ export function InstantAuthCard({
                 Confirmá tu @usuario para empezar
               </h2>
               <p className="type-body-md mt-0.5 text-on-surface-variant">
-                Cuenta conectada:{" "}
-                <strong data-testid="oauth-connected-email">
+                Asociado a tu cuenta de {providerLabel}:{" "}
+                <strong
+                  data-testid="oauth-connected-email"
+                  className="text-ink-navy-deep"
+                >
                   {pendingOnboarding.email}
                 </strong>
               </p>
@@ -176,7 +256,7 @@ export function InstantAuthCard({
               id="auth-display-name"
               type="text"
               maxLength={40}
-              placeholder="Ej: Martín"
+              placeholder="Ej: Guillena"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               className="type-body-md mt-1 w-full rounded-md bg-surface-sky-tint px-space-sm py-2.5 text-ink-navy-deep placeholder:text-on-surface-variant focus:outline-2 focus:outline-primary-container"
@@ -198,7 +278,7 @@ export function InstantAuthCard({
                 id="auth-username"
                 type="text"
                 maxLength={20}
-                placeholder="martin_ok"
+                placeholder="guillena"
                 value={username}
                 onChange={(e) =>
                   setUsername(e.target.value.replace(/^@/, "").toLowerCase())
@@ -260,7 +340,158 @@ export function InstantAuthCard({
             data-testid="btn-change-oauth-provider"
             className="type-label-md mt-1 text-center text-on-surface-variant hover:underline"
           >
-            Cambiar cuenta de Google o Apple
+            Elegir otra cuenta de Google o Apple
+          </button>
+        </form>
+      </section>
+    );
+  }
+
+  if (selectedProvider) {
+    const providerLabel = selectedProvider === "GOOGLE" ? "Google" : "Apple";
+    const providerKnown = knownAccounts.filter(
+      (a) => a.provider === selectedProvider,
+    );
+
+    return (
+      <section
+        data-testid="oauth-account-selector"
+        className="flex flex-col gap-space-md rounded-lg bg-surface-container-lowest p-space-md shadow-level-2"
+      >
+        <div className="flex items-start gap-space-sm">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary-container text-on-primary">
+            <Icon
+              name={selectedProvider === "GOOGLE" ? "mail" : "verified_user"}
+              filled
+              size={22}
+            />
+          </span>
+          <div>
+            <h2 className="type-title-md text-ink-navy-deep">
+              Elegí tu cuenta de {providerLabel}
+            </h2>
+            <p className="type-body-md mt-0.5 text-on-surface-variant">
+              Seleccioná una cuenta guardada en este navegador o ingresá tu
+              correo para asociarlo a tu perfil.
+            </p>
+          </div>
+        </div>
+
+        {providerKnown.length > 0 && (
+          <div
+            data-testid="oauth-known-accounts-list"
+            className="flex flex-col gap-space-xs"
+          >
+            <span className="type-label-sm text-on-surface-variant">
+              Cuentas en este navegador:
+            </span>
+            {providerKnown.map((acc) => (
+              <button
+                key={acc.email}
+                type="button"
+                disabled={loadingProvider !== null}
+                data-testid={`oauth-known-account-${acc.email}`}
+                onClick={() =>
+                  void handleVerifyWithEmail(
+                    selectedProvider,
+                    acc.email,
+                    acc.displayName,
+                  )
+                }
+                className="touch-target flex items-center justify-between rounded-md bg-surface-sky-tint px-space-sm py-2.5 text-left transition-colors hover:bg-surface-sky-subtle"
+              >
+                <div className="flex items-center gap-space-xs">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-on-primary">
+                    <Icon name="person" filled size={18} />
+                  </span>
+                  <div>
+                    <p className="type-label-lg text-ink-navy-deep">
+                      {acc.displayName}
+                      {acc.username ? ` (@${acc.username})` : ""}
+                    </p>
+                    <p className="type-label-sm text-on-surface-variant">
+                      {acc.email}
+                    </p>
+                  </div>
+                </div>
+                <Icon
+                  name="chevron_right"
+                  size={18}
+                  className="text-primary"
+                />
+              </button>
+            ))}
+          </div>
+        )}
+
+        <form
+          onSubmit={handleSubmitEmailForm}
+          noValidate
+          className="flex flex-col gap-space-sm"
+        >
+          <div>
+            <label
+              htmlFor="oauth-account-email"
+              className="type-label-md block text-ink-navy-deep"
+            >
+              {providerKnown.length > 0
+                ? `O ingresá otra cuenta de ${providerLabel}`
+                : `Tu correo de ${providerLabel}`}
+            </label>
+            <input
+              id="oauth-account-email"
+              data-testid="oauth-email-input"
+              type="email"
+              name="email"
+              autoComplete="email"
+              placeholder={
+                selectedProvider === "GOOGLE"
+                  ? "Ej: guillena@gmail.com"
+                  : "Ej: guillena@icloud.com"
+              }
+              value={accountEmail}
+              onChange={(e) => {
+                setAccountEmail(e.target.value);
+                setError(null);
+              }}
+              className="type-body-md mt-1 w-full rounded-md bg-surface-sky-tint px-space-sm py-2.5 text-ink-navy-deep placeholder:text-on-surface-variant focus:outline-2 focus:outline-primary-container"
+            />
+          </div>
+
+          {error && (
+            <div
+              role="alert"
+              data-testid="oauth-verify-error"
+              className="type-body-md rounded-md bg-error-container px-space-sm py-2 text-on-error-container"
+            >
+              {error}
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loadingProvider !== null}
+            data-testid="btn-oauth-email-continue"
+            className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
+          >
+            <Icon name="login" size={20} />
+            <span>
+              {loadingProvider
+                ? "Conectando..."
+                : `Continuar con ${providerLabel}`}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedProvider(null);
+              setError(null);
+            }}
+            data-testid="btn-back-to-providers"
+            className="type-label-md mt-1 text-center text-on-surface-variant hover:underline"
+          >
+            Volver a elegir Google o Apple
           </button>
         </form>
       </section>
@@ -298,11 +529,54 @@ export function InstantAuthCard({
         </div>
       )}
 
+      {knownAccounts.length > 0 && (
+        <div
+          data-testid="oauth-quick-accounts"
+          className="flex flex-col gap-space-xs"
+        >
+          <span className="type-label-sm text-on-surface-variant">
+            Continuar con una cuenta de este navegador:
+          </span>
+          {knownAccounts.map((acc) => (
+            <button
+              key={acc.email}
+              type="button"
+              disabled={loadingProvider !== null}
+              data-testid={`oauth-known-account-${acc.email}`}
+              onClick={() =>
+                void handleVerifyWithEmail(
+                  acc.provider,
+                  acc.email,
+                  acc.displayName,
+                )
+              }
+              className="touch-target flex items-center justify-between rounded-md bg-surface-sky-tint px-space-sm py-2.5 text-left transition-colors hover:bg-surface-sky-subtle"
+            >
+              <div className="flex items-center gap-space-xs">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-on-primary">
+                  <Icon name="person" filled size={18} />
+                </span>
+                <div>
+                  <p className="type-label-lg text-ink-navy-deep">
+                    {acc.displayName}
+                    {acc.username ? ` (@${acc.username})` : ""}
+                  </p>
+                  <p className="type-label-sm text-on-surface-variant">
+                    {acc.email}
+                  </p>
+                </div>
+              </div>
+              <Icon name="chevron_right" size={18} className="text-primary" />
+            </button>
+          ))}
+        </div>
+      )}
+
       <div className="flex flex-col gap-space-xs">
         <button
           type="button"
           disabled={loadingProvider !== null}
-          onClick={() => void handleSelectProvider("GOOGLE")}
+          onClick={() => handleOpenProviderSelector("GOOGLE")}
           data-testid="btn-oauth-google"
           className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
         >
@@ -317,7 +591,7 @@ export function InstantAuthCard({
         <button
           type="button"
           disabled={loadingProvider !== null}
-          onClick={() => void handleSelectProvider("APPLE")}
+          onClick={() => handleOpenProviderSelector("APPLE")}
           data-testid="btn-oauth-apple"
           className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--soft"
         >

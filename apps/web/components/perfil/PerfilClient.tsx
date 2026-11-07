@@ -38,6 +38,8 @@ export function PerfilClient() {
     };
   }, [session?.accessToken, setFairPlay, setSession]);
 
+  const connectedEmail = profile?.email ?? session?.user.email ?? null;
+
   return (
     <div className="flex flex-col gap-space-md">
       <div>
@@ -73,6 +75,15 @@ export function PerfilClient() {
                   >
                     @{profile?.username ?? session.user.username}
                   </p>
+                  {connectedEmail && (
+                    <p
+                      data-testid="profile-email"
+                      className="type-label-sm mt-0.5 inline-flex items-center gap-1 text-primary"
+                    >
+                      <Icon name="mail" size={14} />
+                      <span>{connectedEmail}</span>
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -106,15 +117,27 @@ export function PerfilClient() {
               </div>
             </div>
 
-            <button
-              type="button"
-              onClick={() => setSession(null)}
-              data-testid="logout-button"
-              className="type-label-md touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--soft"
-            >
-              <Icon name="logout" size={18} />
-              <span>Cerrar sesión</span>
-            </button>
+            <div className="grid grid-cols-1 gap-space-xs sm:grid-cols-2">
+              <button
+                type="button"
+                onClick={() => setSession(null)}
+                data-testid="switch-account-button"
+                className="type-label-md touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
+              >
+                <Icon name="swap_horiz" size={18} />
+                <span>Cambiar cuenta</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSession(null)}
+                data-testid="logout-button"
+                className="type-label-md touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--soft"
+              >
+                <Icon name="logout" size={18} />
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
           </section>
         </>
       )}

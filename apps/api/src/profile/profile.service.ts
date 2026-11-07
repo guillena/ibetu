@@ -9,6 +9,7 @@ export interface ProfileView {
   id: string;
   username: string;
   displayName: string;
+  email?: string | null;
   memberSince: Date;
   isSelf: boolean;
   whatsappLinked?: boolean;
@@ -51,7 +52,12 @@ export class ProfileService {
       displayName: user.displayName,
       memberSince: user.createdAt,
       isSelf,
-      ...(isSelf ? { whatsappLinked: Boolean(user.whatsappPhone) } : {}),
+      ...(isSelf
+        ? {
+            email: user.email ?? null,
+            whatsappLinked: Boolean(user.whatsappPhone),
+          }
+        : {}),
       totalPlayed: c.totalPlayed,
       totalWins: c.totalWins,
       credibility: { score: c.score, band: c.band, provisional: c.provisional },
@@ -72,4 +78,3 @@ export class ProfileService {
     return shared !== null;
   }
 }
-

@@ -4,17 +4,17 @@ import type { StoredSession } from "../lib/api";
 const MOCK_SESSION: StoredSession = {
   accessToken: "mock-jwt-token",
   user: {
-    id: "u-ana",
-    username: "ana_ok",
-    displayName: "Ana",
-    email: "ana@gmail.com",
+    id: "u-guillena",
+    username: "guillena",
+    displayName: "Guillena",
+    email: "guillena@gmail.com",
     coinsAvailable: 100,
     credibilityScore: 100,
     credibilityStatus: "GREEN",
   },
 };
 
-test.describe("Login integrado con Google y Apple en /entrar y sesión persistente", () => {
+test.describe("Login integrado con Google y Apple, Selector de Cuenta y Cambiar Cuenta", () => {
   test.beforeEach(async ({ page }) => {
     const emptyChallenges = {
       items: [],
@@ -48,7 +48,7 @@ test.describe("Login integrado con Google y Apple en /entrar y sesión persisten
     });
   });
 
-  test("usuario nuevo en /entrar elige Google, confirma su @usuario único (+100 monedas) y entra al inicio", async ({
+  test("usuario nuevo en /entrar elige Google, ingresa guillena@gmail.com, confirma su @usuario único (+100 monedas) y entra al inicio", async ({
     page,
   }) => {
     let profilePayload: Record<string, unknown> | null = null;
@@ -61,9 +61,9 @@ test.describe("Login integrado con Google y Apple en /entrar y sesión persisten
           status: "NEEDS_PROFILE",
           onboardingToken: "onb-google-123",
           provider: "GOOGLE",
-          email: "martin@gmail.com",
-          suggestedDisplayName: "Martín",
-          suggestedUsername: "martin",
+          email: "guillena@gmail.com",
+          suggestedDisplayName: "Guillena",
+          suggestedUsername: "guillena",
         }),
       });
     });
@@ -74,12 +74,12 @@ test.describe("Login integrado con Google y Apple en /entrar y sesión persisten
         status: 201,
         contentType: "application/json",
         body: JSON.stringify({
-          accessToken: "jwt-martin-100",
+          accessToken: "jwt-guillena-100",
           user: {
-            id: "u-martin",
-            username: "martin_ok",
-            displayName: "Martín",
-            email: "martin@gmail.com",
+            id: "u-guillena",
+            username: "guillena_ok",
+            displayName: "Guillena",
+            email: "guillena@gmail.com",
             coinsAvailable: 100,
             credibilityScore: 100,
             credibilityStatus: "GREEN",
@@ -91,49 +91,64 @@ test.describe("Login integrado con Google y Apple en /entrar y sesión persisten
     await page.goto("/entrar?modo=nuevo");
 
     await expect(page.getByTestId("instant-auth-card")).toBeVisible();
-    await expect(page.getByTestId("btn-oauth-google")).toBeVisible();
-    await expect(page.getByTestId("btn-oauth-apple")).toBeVisible();
-
     await page.getByTestId("btn-oauth-google").click();
+
+    await expect(page.getByTestId("oauth-account-selector")).toBeVisible();
+    await page.getByTestId("oauth-email-input").fill("guillena@gmail.com");
+    await page.getByTestId("btn-oauth-email-continue").click();
 
     await expect(page.getByTestId("oauth-confirm-profile-card")).toBeVisible();
     await expect(page.getByTestId("oauth-connected-email")).toHaveText(
-      "martin@gmail.com",
+      "guillena@gmail.com",
     );
-    await expect(page.locator("#auth-display-name")).toHaveValue("Martín");
-    await page.locator("#auth-username").fill("martin_ok");
+    await expect(page.locator("#auth-display-name")).toHaveValue("Guillena");
+    await page.locator("#auth-username").fill("guillena_ok");
 
     await page.getByTestId("btn-confirm-profile").click();
 
     await expect.poll(() => profilePayload).toEqual({
       onboardingToken: "onb-google-123",
-      displayName: "Martín",
-      username: "martin_ok",
+      displayName: "Guillena",
+      username: "guillena_ok",
     });
 
     await expect(page).toHaveURL(/\/$/);
     const saved = await page.evaluate(() =>
       window.localStorage.getItem("ibetu:session"),
     );
-    expect(saved).toContain("jwt-martin-100");
-    expect(saved).toContain("martin_ok");
+    expect(saved).toContain("jwt-guillena-100");
+    expect(saved).toContain("guillena@gmail.com");
   });
 
-  test("usuario recurrente en /entrar?modo=ingresar toca Apple o Google e ingresa en 1 toque sin pedir @usuario de nuevo", async ({
+  test("si ya hay una cuenta guardada en el navegador, la propone para entrar con 1 toque sin volver a escribir el email", async ({
     page,
   }) => {
+    await page.addInitScript(() => {
+      window.localStorage.setItem(
+        "ibetu:known_oauth_accounts",
+        JSON.stringify([
+          {
+            provider: "GOOGLE",
+            email: "guillena@gmail.com",
+            displayName: "Guillena",
+            username: "guillena",
+          },
+        ]),
+      );
+    });
+
     await page.route("**/api/auth/oauth/verify", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
           status: "AUTHENTICATED",
-          accessToken: "jwt-returning-apple",
+          accessToken: "jwt-returning-google",
           user: {
-            id: "u-ana",
-            username: "ana_ok",
-            displayName: "Ana",
-            email: "ana@privaterelay.appleid.com",
+            id: "u-guillena",
+            username: "guillena",
+            displayName: "Guillena",
+            email: "guillena@gmail.com",
             coinsAvailable: 150,
             credibilityScore: 100,
             credibilityStatus: "GREEN",
@@ -144,55 +159,71 @@ test.describe("Login integrado con Google y Apple en /entrar y sesión persisten
 
     await page.goto("/entrar?modo=ingresar");
 
-    await expect(page.getByTestId("instant-auth-card")).toBeVisible();
-    await page.getByTestId("btn-oauth-apple").click();
+    const knownBtn = page.getByTestId(
+      "oauth-known-account-guillena@gmail.com",
+    );
+    await expect(knownBtn).toBeVisible();
+    await expect(knownBtn).toContainText("guillena@gmail.com");
+    await knownBtn.click();
 
     await expect(page).toHaveURL(/\/$/);
     const saved = await page.evaluate(() =>
       window.localStorage.getItem("ibetu:session"),
     );
-    expect(saved).toContain("jwt-returning-apple");
+    expect(saved).toContain("jwt-returning-google");
   });
 
-  test("si el @usuario elegido ya está en uso al confirmar perfil, muestra sugerencias disponibles", async ({
+  test("en /perfil muestra el correo vinculado (guillena@gmail.com) y permite tocar 'Cambiar cuenta'", async ({
     page,
   }) => {
-    await page.route("**/api/auth/oauth/verify", async (route) => {
+    await page.addInitScript((session) => {
+      window.localStorage.setItem("ibetu:session", JSON.stringify(session));
+      window.localStorage.setItem(
+        "ibetu:known_oauth_accounts",
+        JSON.stringify([
+          {
+            provider: "GOOGLE",
+            email: "guillena@gmail.com",
+            displayName: "Guillena",
+            username: "guillena",
+          },
+        ]),
+      );
+    }, MOCK_SESSION);
+
+    await page.route("**/api/users/me/profile", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
         body: JSON.stringify({
-          status: "NEEDS_PROFILE",
-          onboardingToken: "onb-conflict-1",
-          provider: "GOOGLE",
-          email: "lucas@gmail.com",
-          suggestedDisplayName: "Lucas",
-          suggestedUsername: "lucas",
+          id: "u-guillena",
+          username: "guillena",
+          displayName: "Guillena",
+          email: "guillena@gmail.com",
+          memberSince: new Date().toISOString(),
+          isSelf: true,
+          totalPlayed: 4,
+          totalWins: 3,
+          credibility: { score: 100, band: "GREEN", provisional: false },
         }),
       });
     });
 
-    await page.route("**/api/auth/oauth/complete-profile", async (route) => {
-      await route.fulfill({
-        status: 409,
-        contentType: "application/json",
-        body: JSON.stringify({
-          message: "Ese @usuario ya está en uso. Probá con alguna sugerencia.",
-          suggestions: ["lucas_ok", "lucas7"],
-        }),
-      });
-    });
+    await page.goto("/perfil");
 
-    await page.goto("/entrar");
-    await page.getByTestId("btn-oauth-google").click();
-    await page.getByTestId("btn-confirm-profile").click();
-
-    await expect(page.getByTestId("oauth-profile-error")).toContainText(
-      "Ese @usuario ya está en uso",
+    await expect(page.getByTestId("profile-card")).toBeVisible();
+    await expect(page.getByTestId("profile-email")).toContainText(
+      "guillena@gmail.com",
     );
-    await expect(page.getByTestId("username-suggestion-lucas_ok")).toBeVisible();
-    await page.getByTestId("username-suggestion-lucas_ok").click();
-    await expect(page.locator("#auth-username")).toHaveValue("lucas_ok");
+    await expect(page.getByTestId("switch-account-button")).toBeVisible();
+
+    await page.getByTestId("switch-account-button").click();
+
+    // Se cierra la sesión actual y aparece la tarjeta para elegir cuenta (proponiendo guillena@gmail.com o cambiar a otra)
+    await expect(page.getByTestId("instant-auth-card")).toBeVisible();
+    await expect(
+      page.getByTestId("oauth-known-account-guillena@gmail.com"),
+    ).toBeVisible();
   });
 
   test("visitante con sesión activa en localStorage es redirigido automáticamente de /entrar a /", async ({

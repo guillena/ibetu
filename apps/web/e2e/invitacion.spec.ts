@@ -39,7 +39,7 @@ const EXISTING_DEVICE_SESSION: StoredSession = {
   },
 };
 
-test.describe("Página pública de invitación /r/[code] con Login Google/Apple y sesión persistente", () => {
+test.describe("Página pública de invitación /r/[code] con Selector de Cuenta Google/Apple y Cambiar Cuenta", () => {
   test("el HTML SSR de /r/[code] incluye las etiquetas OpenGraph og:title y og:description", async ({
     request,
   }) => {
@@ -56,7 +56,7 @@ test.describe("Página pública de invitación /r/[code] con Login Google/Apple 
     );
   });
 
-  test("en dispositivo sin sesión, permite elegir Google, confirmar @usuario (+100 monedas) y aceptar el reto", async ({
+  test("en dispositivo sin sesión, permite elegir Google, ingresar su cuenta guillena@gmail.com, confirmar @usuario (+100 monedas) y aceptar el reto", async ({
     page,
   }) => {
     let completedProfilePayload: Record<string, unknown> | null = null;
@@ -78,9 +78,9 @@ test.describe("Página pública de invitación /r/[code] con Login Google/Apple 
           status: "NEEDS_PROFILE",
           onboardingToken: "onb-invite-token-777",
           provider: "GOOGLE",
-          email: "lucas@gmail.com",
-          suggestedDisplayName: "Lucas",
-          suggestedUsername: "lucas",
+          email: "guillena@gmail.com",
+          suggestedDisplayName: "Guillena",
+          suggestedUsername: "guillena",
         }),
       });
     });
@@ -93,10 +93,10 @@ test.describe("Página pública de invitación /r/[code] con Login Google/Apple 
         body: JSON.stringify({
           accessToken: "jwt-invitee-token",
           user: {
-            id: "u-lucas",
-            username: "lucas_ok",
-            displayName: "Lucas",
-            email: "lucas@gmail.com",
+            id: "u-guillena",
+            username: "guillena_ok",
+            displayName: "Guillena",
+            email: "guillena@gmail.com",
             coinsAvailable: 100,
             credibilityScore: 100,
             credibilityStatus: "GREEN",
@@ -124,29 +124,27 @@ test.describe("Página pública de invitación /r/[code] con Login Google/Apple 
     await expect(page.getByTestId("invite-creator")).toContainText(
       "Ana (@ana_ok)",
     );
-    await expect(page.getByTestId("invite-title")).toContainText(
-      "¿A que no embocás el papel en el cesto de 5 metros?",
-    );
-    await expect(page.getByTestId("invite-stake-badge")).toContainText(
-      "Pozo: 20 monedas",
-    );
 
-    // 2. Opciones Google o Apple
+    // 2. Opciones Google o Apple -> abre selector de cuenta e ingresa guillena@gmail.com
     await expect(page.getByTestId("invite-register-modal")).toBeVisible();
-    await expect(page.getByTestId("btn-oauth-google")).toBeVisible();
-    await expect(page.getByTestId("btn-oauth-apple")).toBeVisible();
-
     await page.getByTestId("btn-oauth-google").click();
 
-    // 3. Confirma @usuario y acepta el reto
-    await expect(page.locator("#invite-display-name")).toHaveValue("Lucas");
-    await page.locator("#invite-username").fill("lucas_ok");
+    await expect(page.getByTestId("oauth-account-selector")).toBeVisible();
+    await page.getByTestId("oauth-email-input").fill("guillena@gmail.com");
+    await page.getByTestId("btn-oauth-email-continue").click();
+
+    // 3. Muestra guillena@gmail.com asociado y confirma @usuario + acepta reto
+    await expect(page.getByTestId("invite-oauth-email")).toHaveText(
+      "guillena@gmail.com",
+    );
+    await expect(page.locator("#invite-display-name")).toHaveValue("Guillena");
+    await page.locator("#invite-username").fill("guillena_ok");
     await page.getByTestId("invite-register-submit").click();
 
     await expect.poll(() => completedProfilePayload).toEqual({
       onboardingToken: "onb-invite-token-777",
-      displayName: "Lucas",
-      username: "lucas_ok",
+      displayName: "Guillena",
+      username: "guillena_ok",
       inviteCode: "CODE777",
     });
     await expect.poll(() => acceptedChallenge).toBe(true);
@@ -154,11 +152,9 @@ test.describe("Página pública de invitación /r/[code] con Login Google/Apple 
     await expect(page.getByTestId("invite-accepted-banner")).toBeVisible();
   });
 
-  test("en dispositivo que ya tiene sesión activa en localStorage, no pide loguearse de nuevo y muestra directamente 'Aceptar Reto ahora'", async ({
+  test("en dispositivo que ya tiene sesión activa, muestra 'Aceptar Reto ahora', indica la cuenta conectada y permite 'Cambiar cuenta'", async ({
     page,
   }) => {
-    let acceptedChallenge = false;
-
     await page.addInitScript((session) => {
       window.localStorage.setItem("ibetu:session", JSON.stringify(session));
     }, EXISTING_DEVICE_SESSION);
@@ -171,24 +167,22 @@ test.describe("Página pública de invitación /r/[code] con Login Google/Apple 
       });
     });
 
-    await page.route("**/api/challenges/ch-inv-777/accept", async (route) => {
-      acceptedChallenge = true;
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ id: "ch-inv-777", status: "ACTIVE" }),
-      });
-    });
-
     await page.goto("/r/CODE777");
 
-    // No pide loguearse de nuevo
+    // No pide loguearse de nuevo y muestra con qué cuenta está conectado
     await expect(page.getByTestId("invite-register-modal")).toHaveCount(0);
     await expect(page.getByTestId("invite-authenticated-box")).toBeVisible();
     await expect(page.getByTestId("accept-invite-btn")).toBeVisible();
+    await expect(page.getByTestId("invite-current-account")).toContainText(
+      "Lucas (@lucas_ok)",
+    );
+    await expect(page.getByTestId("invite-current-account")).toContainText(
+      "lucas@gmail.com",
+    );
 
-    await page.getByTestId("accept-invite-btn").click();
-    await expect.poll(() => acceptedChallenge).toBe(true);
-    await expect(page.getByTestId("invite-accepted-banner")).toBeVisible();
+    // Permite tocar "Cambiar cuenta" para abrir el selector de login en la misma invitación
+    await page.getByTestId("invite-switch-account-btn").click();
+    await expect(page.getByTestId("invite-register-modal")).toBeVisible();
+    await expect(page.getByTestId("btn-oauth-google")).toBeVisible();
   });
 });

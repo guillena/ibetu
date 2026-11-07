@@ -9,9 +9,14 @@ import { Icon } from "@/components/ui/Icon";
 import {
   ApiError,
   apiFetch,
+  buildOAuthTokenForEmail,
   completeOAuthProfile,
+  getKnownOAuthAccounts,
   getStoredSession,
+  type KnownOAuthAccount,
+  normalizeOAuthEmail,
   type OAuthProvider,
+  saveKnownOAuthAccount,
   saveStoredSession,
   subscribeSession,
   type CurrencyMode,
@@ -82,7 +87,12 @@ export function InvitePageClient({
   const [loadingChallenge, setLoadingChallenge] = useState(!initialChallenge);
   const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Estado del login OAuth (Google / Apple) y confirmación de @usuario en la invitación
+  // Estado del selector de cuenta OAuth (Google / Apple) y confirmación de @usuario
+  const [selectedProvider, setSelectedProvider] =
+    useState<OAuthProvider | null>(null);
+  const [accountEmail, setAccountEmail] = useState("");
+  const [knownAccounts, setKnownAccounts] = useState<KnownOAuthAccount[]>([]);
+
   const [pendingOnboarding, setPendingOnboarding] =
     useState<PendingInviteOnboarding | null>(null);
   const [loadingProvider, setLoadingProvider] = useState<OAuthProvider | null>(
@@ -94,6 +104,10 @@ export function InvitePageClient({
   const [authError, setAuthError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [accepted, setAccepted] = useState(false);
+
+  useEffect(() => {
+    setKnownAccounts(getKnownOAuthAccounts());
+  }, [session]);
 
   useEffect(() => {
     let active = true;
@@ -154,18 +168,60 @@ export function InvitePageClient({
     });
   }
 
-  async function handleSelectOAuthProvider(provider: OAuthProvider) {
+  function handleOpenProviderSelector(provider: OAuthProvider) {
     setAuthError(null);
     setSuggestions([]);
-    setLoadingProvider(provider);
+    setSelectedProvider(provider);
+    const providerAccounts = getKnownOAuthAccounts(provider);
+    setKnownAccounts(getKnownOAuthAccounts());
+    if (providerAccounts.length > 0 && !accountEmail) {
+      setAccountEmail(providerAccounts[0].email);
+    }
+  }
 
+  async function handleVerifyWithEmail(
+    provider: OAuthProvider,
+    rawEmail: string,
+    displayNameHint?: string,
+  ) {
+    setAuthError(null);
+    setSuggestions([]);
+
+    const normalizedEmail = normalizeOAuthEmail(provider, rawEmail);
+    if (
+      !normalizedEmail ||
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+    ) {
+      setAuthError(
+        provider === "GOOGLE"
+          ? "Ingresá tu correo de Google (ej: guillena@gmail.com)."
+          : "Ingresá tu correo de Apple (ej: guillena@icloud.com).",
+      );
+      return;
+    }
+
+    setLoadingProvider(provider);
     try {
-      const res = await verifyOAuth(provider);
+      const idToken = buildOAuthTokenForEmail(
+        provider,
+        normalizedEmail,
+        displayNameHint,
+      );
+      const res = await verifyOAuth(provider, idToken, displayNameHint);
       if (res.status === "AUTHENTICATED") {
         const loggedInSession: StoredSession = {
           accessToken: res.accessToken,
-          user: res.user,
+          user: {
+            ...res.user,
+            email: res.user.email ?? normalizedEmail,
+          },
         };
+        saveKnownOAuthAccount({
+          provider,
+          email: loggedInSession.user.email ?? normalizedEmail,
+          displayName: loggedInSession.user.displayName,
+          username: loggedInSession.user.username,
+        });
         saveStoredSession(loggedInSession);
         await acceptChallengeWithSession(loggedInSession);
         return;
@@ -174,7 +230,7 @@ export function InvitePageClient({
       setPendingOnboarding({
         onboardingToken: res.onboardingToken,
         provider: res.provider,
-        email: res.email,
+        email: res.email || normalizedEmail,
       });
       setDisplayName(res.suggestedDisplayName);
       setUsername(res.suggestedUsername);
@@ -187,6 +243,12 @@ export function InvitePageClient({
     } finally {
       setLoadingProvider(null);
     }
+  }
+
+  async function handleSubmitEmailForm(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedProvider) return;
+    await handleVerifyWithEmail(selectedProvider, accountEmail);
   }
 
   async function handleConfirmProfileAndAccept(e: React.FormEvent) {
@@ -218,8 +280,21 @@ export function InvitePageClient({
         username: cleanUser,
         inviteCode: code,
       });
-      saveStoredSession(reg);
-      await acceptChallengeWithSession(reg);
+      const fullSession: StoredSession = {
+        accessToken: reg.accessToken,
+        user: {
+          ...reg.user,
+          email: reg.user.email ?? pendingOnboarding.email,
+        },
+      };
+      saveKnownOAuthAccount({
+        provider: pendingOnboarding.provider,
+        email: pendingOnboarding.email,
+        displayName: fullSession.user.displayName,
+        username: fullSession.user.username,
+      });
+      saveStoredSession(fullSession);
+      await acceptChallengeWithSession(fullSession);
     } catch (err) {
       if (err instanceof ApiError) {
         setAuthError(err.message);
@@ -253,6 +328,13 @@ export function InvitePageClient({
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function handleSwitchAccountFromInvite() {
+    setAuthError(null);
+    setPendingOnboarding(null);
+    setSelectedProvider(null);
+    saveStoredSession(null);
   }
 
   return (
@@ -381,16 +463,26 @@ export function InvitePageClient({
               >
                 {pendingOnboarding
                   ? "Confirmá tu @usuario y aceptá el reto"
-                  : "Entrá con Google o Apple para aceptar el reto"}
+                  : selectedProvider
+                    ? `Elegí tu cuenta de ${selectedProvider === "GOOGLE" ? "Google" : "Apple"}`
+                    : "Entrá con Google o Apple para aceptar el reto"}
               </h2>
               <p className="type-body-md mt-0.5 text-on-surface-variant">
                 {pendingOnboarding ? (
                   <>
-                    Cuenta conectada:{" "}
-                    <strong data-testid="invite-oauth-email">
+                    Asociado a tu cuenta:{" "}
+                    <strong
+                      data-testid="invite-oauth-email"
+                      className="text-ink-navy-deep"
+                    >
                       {pendingOnboarding.email}
                     </strong>
                     . Recibís <strong>100 monedas gratis</strong> para jugar.
+                  </>
+                ) : selectedProvider ? (
+                  <>
+                    Seleccioná una cuenta de este navegador o ingresá tu correo
+                    para asociarlo a tu perfil.
                   </>
                 ) : (
                   <>
@@ -402,7 +494,7 @@ export function InvitePageClient({
             </div>
           </div>
 
-          {!pendingOnboarding ? (
+          {!pendingOnboarding && !selectedProvider ? (
             <div className="flex flex-col gap-space-xs">
               {authError && (
                 <div
@@ -414,10 +506,57 @@ export function InvitePageClient({
                 </div>
               )}
 
+              {knownAccounts.length > 0 && (
+                <div
+                  data-testid="invite-known-accounts"
+                  className="mb-1 flex flex-col gap-space-xs"
+                >
+                  <span className="type-label-sm text-on-surface-variant">
+                    Cuentas guardadas en este navegador:
+                  </span>
+                  {knownAccounts.map((acc) => (
+                    <button
+                      key={acc.email}
+                      type="button"
+                      disabled={loadingProvider !== null}
+                      data-testid={`oauth-known-account-${acc.email}`}
+                      onClick={() =>
+                        void handleVerifyWithEmail(
+                          acc.provider,
+                          acc.email,
+                          acc.displayName,
+                        )
+                      }
+                      className="touch-target flex items-center justify-between rounded-md bg-surface-sky-tint px-space-sm py-2.5 text-left transition-colors hover:bg-surface-sky-subtle"
+                    >
+                      <div className="flex items-center gap-space-xs">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-on-primary">
+                          <Icon name="person" filled size={18} />
+                        </span>
+                        <div>
+                          <p className="type-label-lg text-ink-navy-deep">
+                            {acc.displayName}
+                            {acc.username ? ` (@${acc.username})` : ""}
+                          </p>
+                          <p className="type-label-sm text-on-surface-variant">
+                            {acc.email}
+                          </p>
+                        </div>
+                      </div>
+                      <Icon
+                        name="chevron_right"
+                        size={18}
+                        className="text-primary"
+                      />
+                    </button>
+                  ))}
+                </div>
+              )}
+
               <button
                 type="button"
                 disabled={loadingProvider !== null}
-                onClick={() => void handleSelectOAuthProvider("GOOGLE")}
+                onClick={() => handleOpenProviderSelector("GOOGLE")}
                 data-testid="btn-oauth-google"
                 className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
               >
@@ -432,7 +571,7 @@ export function InvitePageClient({
               <button
                 type="button"
                 disabled={loadingProvider !== null}
-                onClick={() => void handleSelectOAuthProvider("APPLE")}
+                onClick={() => handleOpenProviderSelector("APPLE")}
                 data-testid="btn-oauth-apple"
                 className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--soft"
               >
@@ -443,6 +582,120 @@ export function InvitePageClient({
                     : "Continuar con Apple"}
                 </span>
               </button>
+            </div>
+          ) : !pendingOnboarding && selectedProvider ? (
+            <div
+              data-testid="oauth-account-selector"
+              className="flex flex-col gap-space-sm"
+            >
+              {knownAccounts
+                .filter((a) => a.provider === selectedProvider)
+                .map((acc) => (
+                  <button
+                    key={acc.email}
+                    type="button"
+                    disabled={loadingProvider !== null}
+                    data-testid={`oauth-known-account-${acc.email}`}
+                    onClick={() =>
+                      void handleVerifyWithEmail(
+                        selectedProvider,
+                        acc.email,
+                        acc.displayName,
+                      )
+                    }
+                    className="touch-target flex items-center justify-between rounded-md bg-surface-sky-tint px-space-sm py-2.5 text-left transition-colors hover:bg-surface-sky-subtle"
+                  >
+                    <div className="flex items-center gap-space-xs">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-on-primary">
+                        <Icon name="person" filled size={18} />
+                      </span>
+                      <div>
+                        <p className="type-label-lg text-ink-navy-deep">
+                          {acc.displayName}
+                          {acc.username ? ` (@${acc.username})` : ""}
+                        </p>
+                        <p className="type-label-sm text-on-surface-variant">
+                          {acc.email}
+                        </p>
+                      </div>
+                    </div>
+                    <Icon
+                      name="chevron_right"
+                      size={18}
+                      className="text-primary"
+                    />
+                  </button>
+                ))}
+
+              <form
+                onSubmit={handleSubmitEmailForm}
+                noValidate
+                className="flex flex-col gap-space-sm"
+              >
+                <div>
+                  <label
+                    htmlFor="oauth-account-email"
+                    className="type-label-md block text-ink-navy-deep"
+                  >
+                    Tu correo de{" "}
+                    {selectedProvider === "GOOGLE" ? "Google" : "Apple"}
+                  </label>
+                  <input
+                    id="oauth-account-email"
+                    data-testid="oauth-email-input"
+                    type="email"
+                    name="email"
+                    autoComplete="email"
+                    placeholder={
+                      selectedProvider === "GOOGLE"
+                        ? "Ej: guillena@gmail.com"
+                        : "Ej: guillena@icloud.com"
+                    }
+                    value={accountEmail}
+                    onChange={(e) => {
+                      setAccountEmail(e.target.value);
+                      setAuthError(null);
+                    }}
+                    className="type-body-md mt-1 w-full rounded-md bg-surface-sky-tint px-space-sm py-2.5 text-ink-navy-deep placeholder:text-on-surface-variant focus:outline-2 focus:outline-primary-container"
+                  />
+                </div>
+
+                {authError && (
+                  <div
+                    role="alert"
+                    data-testid="invite-auth-error"
+                    className="type-body-md rounded-md bg-error-container px-space-sm py-2 text-on-error-container"
+                  >
+                    {authError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={loadingProvider !== null}
+                  data-testid="btn-oauth-email-continue"
+                  className="type-label-lg touch-target inline-flex items-center justify-center gap-space-xs rounded-lg px-space-md btn-3d btn-3d--primary"
+                >
+                  <Icon name="login" size={20} />
+                  <span>
+                    {loadingProvider
+                      ? "Conectando..."
+                      : `Continuar con ${selectedProvider === "GOOGLE" ? "Google" : "Apple"}`}
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedProvider(null);
+                    setAuthError(null);
+                  }}
+                  data-testid="btn-back-to-providers"
+                  className="type-label-md mt-1 text-center text-on-surface-variant hover:underline"
+                >
+                  Volver a elegir Google o Apple
+                </button>
+              </form>
             </div>
           ) : (
             <form
@@ -460,7 +713,7 @@ export function InvitePageClient({
                 <input
                   id="invite-display-name"
                   type="text"
-                  placeholder="Ej: Lucas"
+                  placeholder="Ej: Guillena"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="type-body-md mt-1 w-full rounded-md bg-surface-sky-tint px-space-sm py-2.5 text-ink-navy-deep focus:outline-2 focus:outline-primary-container"
@@ -481,7 +734,7 @@ export function InvitePageClient({
                   <input
                     id="invite-username"
                     type="text"
-                    placeholder="lucas_ok"
+                    placeholder="guillena"
                     value={username}
                     onChange={(e) =>
                       setUsername(
@@ -547,7 +800,7 @@ export function InvitePageClient({
                 }}
                 className="type-label-md mt-1 text-center text-on-surface-variant hover:underline"
               >
-                Cambiar cuenta de Google o Apple
+                Elegir otra cuenta de Google o Apple
               </button>
             </form>
           )}
@@ -605,6 +858,34 @@ export function InvitePageClient({
               </button>
             )
           )}
+
+          <div
+            data-testid="invite-current-account"
+            className="flex flex-wrap items-center justify-between gap-2 rounded-md bg-surface-sky-tint px-space-sm py-2"
+          >
+            <div className="text-left">
+              <p className="type-label-md text-ink-navy-deep">
+                Conectado como{" "}
+                <strong>
+                  {session.user.displayName} (@{session.user.username})
+                </strong>
+              </p>
+              {session.user.email && (
+                <p className="type-label-sm text-on-surface-variant">
+                  {session.user.email}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={handleSwitchAccountFromInvite}
+              data-testid="invite-switch-account-btn"
+              className="type-label-md inline-flex items-center gap-1 rounded-full bg-surface-container-lowest px-3 py-1 text-primary shadow-level-1 hover:underline"
+            >
+              <Icon name="swap_horiz" size={16} />
+              <span>Cambiar cuenta</span>
+            </button>
+          </div>
         </section>
       )}
     </div>

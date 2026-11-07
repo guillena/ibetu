@@ -18,6 +18,8 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
     // 1. Jugador A se registra con Google desde /crear y recibe 100 monedas iniciales
     await pageA.goto("/crear");
     await pageA.getByTestId("btn-oauth-google").click();
+    await pageA.getByTestId("oauth-email-input").fill(`${userA}@gmail.com`);
+    await pageA.getByTestId("btn-oauth-email-continue").click();
     await pageA.locator("#auth-display-name").fill("Ana");
     await pageA.locator("#auth-username").fill(userA);
     await pageA.getByTestId("btn-confirm-profile").click();
@@ -47,6 +49,8 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
     await pageB.goto(invitePath);
     await expect(pageB.getByTestId("invite-creator")).toContainText(`Ana (@${userA})`);
     await pageB.getByTestId("btn-oauth-google").click();
+    await pageB.getByTestId("oauth-email-input").fill(`${userB}@gmail.com`);
+    await pageB.getByTestId("btn-oauth-email-continue").click();
     await pageB.locator("#invite-display-name").fill("Beto");
     await pageB.locator("#invite-username").fill(userB);
     await pageB.getByTestId("invite-register-submit").click();
@@ -114,6 +118,8 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
     // 1. Registrar a Jugador A y crear un primer reto rápido con Juez C para que sean amigos
     await pageA.goto("/crear");
     await pageA.getByTestId("btn-oauth-google").click();
+    await pageA.getByTestId("oauth-email-input").fill(`${userA}@gmail.com`);
+    await pageA.getByTestId("btn-oauth-email-continue").click();
     await pageA.locator("#auth-display-name").fill("Ana");
     await pageA.locator("#auth-username").fill(userA);
     await pageA.getByTestId("btn-confirm-profile").click();
@@ -131,6 +137,8 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
     // Juez C se registra aceptando ese reto y ambos declaran empate para liberar las monedas
     await pageC.goto(linkForC);
     await pageC.getByTestId("btn-oauth-google").click();
+    await pageC.getByTestId("oauth-email-input").fill(`${userC}@gmail.com`);
+    await pageC.getByTestId("btn-oauth-email-continue").click();
     await pageC.locator("#invite-display-name").fill("Carla Juez");
     await pageC.locator("#invite-username").fill(userC);
     await pageC.getByTestId("invite-register-submit").click();
@@ -155,9 +163,11 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
       .getByTestId("go-to-challenge-detail")
       .getAttribute("href");
 
-    // 3. Jugador B se registra desde el link y acepta (20 monedas en reserva + +15 de referido para Ana)
+    // 3. Jugador B se registra desde el link y acepta
     await pageB.goto(linkForB);
     await pageB.getByTestId("btn-oauth-google").click();
+    await pageB.getByTestId("oauth-email-input").fill(`${userB}@gmail.com`);
+    await pageB.getByTestId("btn-oauth-email-continue").click();
     await pageB.locator("#invite-display-name").fill("Beto");
     await pageB.locator("#invite-username").fill(userB);
     await pageB.getByTestId("invite-register-submit").click();

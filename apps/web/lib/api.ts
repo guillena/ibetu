@@ -40,6 +40,13 @@ export interface StoredSession {
   user: SessionUser;
 }
 
+export interface KnownOAuthAccount {
+  provider: OAuthProvider;
+  email: string;
+  displayName: string;
+  username?: string;
+}
+
 export interface PublicUser {
   id: string;
   username: string;
@@ -90,6 +97,7 @@ export interface ProfileView {
   id: string;
   username: string;
   displayName: string;
+  email?: string | null;
   memberSince: string;
   isSelf: boolean;
   whatsappLinked?: boolean;
@@ -100,6 +108,93 @@ export interface ProfileView {
     band: FairPlayBand;
     provisional: boolean;
   };
+}
+
+export const KNOWN_ACCOUNTS_STORAGE_KEY = "ibetu:known_oauth_accounts";
+
+export function normalizeOAuthEmail(
+  provider: OAuthProvider,
+  rawInput: string,
+): string {
+  const trimmed = rawInput.trim().toLowerCase();
+  if (!trimmed) return "";
+  if (trimmed.includes("@")) return trimmed;
+  const defaultDomain = provider === "GOOGLE" ? "gmail.com" : "icloud.com";
+  return `${trimmed}@${defaultDomain}`;
+}
+
+export function deriveDisplayNameFromEmail(email: string): string {
+  const localPart = email.trim().split("@")[0] ?? "";
+  const words = localPart
+    .split(/[._+-]+/)
+    .map((w) => w.trim())
+    .filter(Boolean);
+  if (words.length === 0) return "Jugador";
+  return words
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ")
+    .slice(0, 40);
+}
+
+export function buildOAuthTokenForEmail(
+  provider: OAuthProvider,
+  rawEmail: string,
+  displayNameHint?: string,
+): string {
+  const email = normalizeOAuthEmail(provider, rawEmail);
+  const subKey = email.replace(/[^a-z0-9]/g, "_");
+  const displayName =
+    displayNameHint?.trim() || deriveDisplayNameFromEmail(email);
+  return `dev:${provider}:sub_${provider.toLowerCase()}_${subKey}:${email}:${displayName}`;
+}
+
+export function getKnownOAuthAccounts(
+  provider?: OAuthProvider,
+): KnownOAuthAccount[] {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = window.localStorage.getItem(KNOWN_ACCOUNTS_STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    const valid = parsed.filter(
+      (item): item is KnownOAuthAccount =>
+        Boolean(
+          item &&
+            typeof item.email === "string" &&
+            (item.provider === "GOOGLE" || item.provider === "APPLE"),
+        ),
+    );
+    return provider ? valid.filter((a) => a.provider === provider) : valid;
+  } catch {
+    return [];
+  }
+}
+
+export function saveKnownOAuthAccount(account: KnownOAuthAccount): void {
+  if (typeof window === "undefined") return;
+  const email = account.email?.trim().toLowerCase();
+  if (!email) return;
+  try {
+    const existing = getKnownOAuthAccounts();
+    const filtered = existing.filter((a) => a.email.toLowerCase() !== email);
+    const updated: KnownOAuthAccount[] = [
+      {
+        provider: account.provider,
+        email,
+        displayName:
+          account.displayName?.trim() || deriveDisplayNameFromEmail(email),
+        ...(account.username ? { username: account.username } : {}),
+      },
+      ...filtered,
+    ].slice(0, 6);
+    window.localStorage.setItem(
+      KNOWN_ACCOUNTS_STORAGE_KEY,
+      JSON.stringify(updated),
+    );
+  } catch {
+    // Ignorar errores de almacenamiento en modo privado
+  }
 }
 
 export function buildDevOAuthToken(provider: OAuthProvider): string {
@@ -210,6 +305,17 @@ export function saveStoredSession(session: StoredSession | null) {
       window.localStorage.setItem(SESSION_STORAGE_KEY, raw);
       cachedSessionRaw = raw;
       cachedSessionValue = session;
+      if (session.user.email) {
+        const isApple =
+          session.user.email.endsWith("@icloud.com") ||
+          session.user.email.endsWith("@privaterelay.appleid.com");
+        saveKnownOAuthAccount({
+          provider: isApple ? "APPLE" : "GOOGLE",
+          email: session.user.email,
+          displayName: session.user.displayName,
+          username: session.user.username,
+        });
+      }
     } else {
       window.localStorage.removeItem(SESSION_STORAGE_KEY);
       cachedSessionRaw = null;
@@ -273,4 +379,3 @@ export async function apiFetch<T>(
 
   return data as T;
 }
-

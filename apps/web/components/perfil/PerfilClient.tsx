@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { InstantAuthCard } from "@/components/auth/InstantAuthCard";
-import { WhatsappLinkPromptCard } from "@/components/auth/WhatsappLinkPromptCard";
 import { useShell } from "@/components/shell/shell-context";
 import { Icon } from "@/components/ui/Icon";
 import { ApiError, apiFetch, type ProfileView } from "@/lib/api";
@@ -38,10 +37,6 @@ export function PerfilClient() {
       active = false;
     };
   }, [session?.accessToken, setFairPlay, setSession]);
-
-  const isWhatsappLinked = Boolean(
-    profile?.whatsappLinked ?? session?.user.whatsappLinked,
-  );
 
   return (
     <div className="flex flex-col gap-space-md">
@@ -80,16 +75,6 @@ export function PerfilClient() {
                   </p>
                 </div>
               </div>
-
-              {isWhatsappLinked && (
-                <span
-                  data-testid="profile-whatsapp-linked-badge"
-                  className="type-label-sm inline-flex items-center gap-1 rounded-full bg-secondary-container px-2.5 py-1 text-on-secondary-container"
-                >
-                  <Icon name="verified_user" size={14} />
-                  <span>WhatsApp vinculado</span>
-                </span>
-              )}
             </div>
 
             <div className="grid grid-cols-3 gap-space-xs text-center">
@@ -120,10 +105,6 @@ export function PerfilClient() {
                 </p>
               </div>
             </div>
-
-            {!isWhatsappLinked && (
-              <WhatsappLinkPromptCard accessToken={session.accessToken} />
-            )}
 
             <button
               type="button"

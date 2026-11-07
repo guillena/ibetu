@@ -65,13 +65,16 @@ export class FriendsService {
   }
 
   /**
-   * Premio por viralidad: +30 monedas al invitador cuando el invitado ya vinculó su
-   * WhatsApp Y activó su primer reto (en cualquier orden). Se acredita una sola vez.
-   * Devuelve true si este llamado acreditó el premio.
+   * Premio por viralidad: +30 monedas al invitador cuando el invitado ya tiene
+   * una identidad verificada (Google, Apple, email o WhatsApp) Y activó su primer reto.
+   * Se acredita una sola vez. Devuelve true si este llamado acreditó el premio.
    */
   async tryGrantReferral(inviteeId: string): Promise<boolean> {
     const invitee = await this.prisma.user.findUnique({ where: { id: inviteeId } });
-    if (!invitee?.invitedById || !invitee.whatsappPhone) return false;
+    const hasVerifiedIdentity = Boolean(
+      invitee?.googleSub || invitee?.appleSub || invitee?.email || invitee?.whatsappPhone,
+    );
+    if (!invitee?.invitedById || !hasVerifiedIdentity) return false;
     if (invitee.invitedById === invitee.id) return false;
 
     const activated = await this.prisma.challenge.count({

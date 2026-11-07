@@ -15,12 +15,13 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
     const pageA = await ctxA.newPage();
     const pageB = await ctxB.newPage();
 
-    // 1. Jugador A se registra desde /crear y recibe 50 monedas iniciales
+    // 1. Jugador A se registra con Google desde /crear y recibe 100 monedas iniciales
     await pageA.goto("/crear");
+    await pageA.getByTestId("btn-oauth-google").click();
     await pageA.locator("#auth-display-name").fill("Ana");
     await pageA.locator("#auth-username").fill(userA);
-    await pageA.getByTestId("instant-auth-card").getByRole("button", { name: /Entrar/ }).click();
-    await expect(pageA.getByTestId("balance-chip")).toContainText("50");
+    await pageA.getByTestId("btn-confirm-profile").click();
+    await expect(pageA.getByTestId("balance-chip")).toContainText("100");
 
     // 2. Jugador A crea un reto de 10 monedas por link de WhatsApp
     await pageA.getByTestId("preset-pill").first().click();
@@ -42,22 +43,23 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
     expect(ssrHtml).toMatch(/property="og:title"[^>]+content="Ana te desafía en I Bet U:/i);
     expect(ssrHtml).toMatch(/property="og:description"[^>]+content="Pozo en juego: 20 monedas/i);
 
-    // 3. Jugador B abre el link /r/[code], se registra en 1 paso y acepta el reto
+    // 3. Jugador B abre el link /r/[code], elige Google, confirma su @usuario y acepta el reto
     await pageB.goto(invitePath);
     await expect(pageB.getByTestId("invite-creator")).toContainText(`Ana (@${userA})`);
+    await pageB.getByTestId("btn-oauth-google").click();
     await pageB.locator("#invite-display-name").fill("Beto");
     await pageB.locator("#invite-username").fill(userB);
     await pageB.getByTestId("invite-register-submit").click();
 
     await expect(pageB.getByTestId("invite-accepted-banner")).toBeVisible();
 
-    // 4. Verificar que hay 20 monedas en reserva (10 de Ana y 10 de Beto; cada uno tiene 40 disponibles y 10 en juego)
+    // 4. Verificar que hay 20 monedas en reserva (10 de Ana y 10 de Beto; cada uno tiene 90 disponibles y 10 en juego)
     await pageA.goto("/monedero");
-    await expect(pageA.getByTestId("wallet-available")).toContainText("40");
+    await expect(pageA.getByTestId("wallet-available")).toContainText("90");
     await expect(pageA.getByTestId("wallet-reserved")).toContainText("10");
 
     await pageB.goto("/monedero");
-    await expect(pageB.getByTestId("wallet-available")).toContainText("40");
+    await expect(pageB.getByTestId("wallet-available")).toContainText("90");
     await expect(pageB.getByTestId("wallet-reserved")).toContainText("10");
 
     // 5. Ambos entran al detalle del reto y declaran resultado coincidente (Ana: ¡Gané yo!, Beto: Ganó mi rival)
@@ -71,13 +73,13 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
     await pageB.goto(detailHref!);
     await pageB.getByTestId("vote-loss").click();
 
-    // 6. El reto se cierra de inmediato, el pozo (20 monedas) se liquida una única vez a Ana (saldo 60) y se actualiza el % Fair Play
+    // 6. El reto se cierra de inmediato, el pozo (20 monedas) se liquida una única vez a Ana (saldo 110) y se actualiza el % Fair Play
     await expect(pageB.getByTestId("detail-closed-outcome")).toContainText(
       `Ganador: Ana (@${userA})`,
     );
 
     await pageA.goto("/monedero");
-    await expect(pageA.getByTestId("wallet-available")).toContainText("60");
+    await expect(pageA.getByTestId("wallet-available")).toContainText("110");
     await expect(pageA.getByTestId("wallet-reserved")).toContainText("0");
 
     await pageA.goto("/perfil");
@@ -111,9 +113,10 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
 
     // 1. Registrar a Jugador A y crear un primer reto rápido con Juez C para que sean amigos
     await pageA.goto("/crear");
+    await pageA.getByTestId("btn-oauth-google").click();
     await pageA.locator("#auth-display-name").fill("Ana");
     await pageA.locator("#auth-username").fill(userA);
-    await pageA.getByTestId("instant-auth-card").getByRole("button", { name: /Entrar/ }).click();
+    await pageA.getByTestId("btn-confirm-profile").click();
 
     await pageA.getByTestId("preset-pill").first().click();
     await pageA.getByTestId("stake-pill-10").click();
@@ -127,6 +130,7 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
 
     // Juez C se registra aceptando ese reto y ambos declaran empate para liberar las monedas
     await pageC.goto(linkForC);
+    await pageC.getByTestId("btn-oauth-google").click();
     await pageC.locator("#invite-display-name").fill("Carla Juez");
     await pageC.locator("#invite-username").fill(userC);
     await pageC.getByTestId("invite-register-submit").click();
@@ -151,8 +155,9 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
       .getByTestId("go-to-challenge-detail")
       .getAttribute("href");
 
-    // 3. Jugador B se registra desde el link y acepta (20 monedas en reserva)
+    // 3. Jugador B se registra desde el link y acepta (20 monedas en reserva + +15 de referido para Ana)
     await pageB.goto(linkForB);
+    await pageB.getByTestId("btn-oauth-google").click();
     await pageB.locator("#invite-display-name").fill("Beto");
     await pageB.locator("#invite-username").fill(userB);
     await pageB.getByTestId("invite-register-submit").click();
@@ -189,11 +194,10 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
 
     // 7. Verificar saldos finales y % Fair Play
     await pageA.goto("/monedero");
-    await expect(pageA.getByTestId("wallet-available")).toContainText("60");
     await expect(pageA.getByTestId("wallet-reserved")).toContainText("0");
 
     await pageC.goto("/monedero");
-    await expect(pageC.getByTestId("wallet-available")).toContainText("55"); // 50 iniciales + 5 por laudar
+    await expect(pageC.getByTestId("wallet-available")).toContainText("105"); // 100 iniciales + 5 por laudar
 
     await pageB.goto("/perfil");
     await expect(pageB.getByTestId("profile-fair-play")).toHaveText("0%");
@@ -203,4 +207,3 @@ test.describe("Circuito End-to-End completo con API + PostgreSQL + Redis reales 
     await ctxC.close();
   });
 });
-

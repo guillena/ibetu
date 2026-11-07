@@ -1,0 +1,14 @@
+# Tasks
+
+## 1. Esquema de Base de Datos y Backend OAuth (Google y Apple)
+
+- [x] 1.1 Agregar `email String? @unique`, `googleSub String? @unique` y `appleSub String? @unique` al modelo `User` en `apps/api/prisma/schema.prisma`, regenerar el cliente de Prisma y verificar que `npx --prefix apps/api prisma generate` finalice sin errores.
+- [x] 1.2 Implementar en `AuthService` (`apps/api/src/auth/auth.service.ts`) la verificación de tokens de Google y Apple (`verifyOAuthToken` → `AUTHENTICATED` o `NEEDS_PROFILE` con `onboardingToken`, `suggestedDisplayName` y `suggestedUsername`) y la confirmación de perfil (`completeOAuthProfile` con `BONUS_INIT_COINS = 100` y manejo de `@usuario` ocupado con sugerencias), exponiendo `POST /auth/oauth/verify` y `POST /auth/oauth/complete-profile` en `AuthController` y verificando con tests unitarios en `apps/api/src/auth/auth.service.spec.ts`.
+- [x] 1.3 Actualizar `FriendsService.tryGrantReferral` (`apps/api/src/friends/friends.service.ts`) para acreditar las +30 monedas de viralidad cuando el invitado posea identidad verificada (`googleSub`, `appleSub` o `email`) y active su primer reto, verificando con los tests de referidos en `apps/api`.
+
+## 2. Frontend: Login Integrado con Google y Apple y Confirmación de `@usuario`
+
+- [x] 2.1 Actualizar `apps/web/lib/api.ts` con los tipos y helpers para `POST /auth/oauth/verify` y `POST /auth/oauth/complete-profile`, eliminando los helpers de login por WhatsApp (`fetchWhatsappLoginUrl`) y verificando que `npm --prefix apps/web run build` compile los tipos correctamente.
+- [x] 2.2 Actualizar `apps/web/components/auth/InstantAuthCard.tsx` y `apps/web/app/(app)/entrar/page.tsx` para presentar los botones 3D "Continuar con Google" (`data-testid="btn-oauth-google"`) y "Continuar con Apple" (`data-testid="btn-oauth-apple"`), mostrar el paso de confirmación de `@usuario` únicamente cuando `status === "NEEDS_PROFILE"`, e iniciar sesión en un clic cuando `status === "AUTHENTICATED"` (redirigiendo a `/` en `/entrar` si ya existe sesión en el dispositivo).
+- [x] 2.3 Actualizar `apps/web/components/invitacion/InvitePageClient.tsx`, `apps/web/components/crear/CrearRetoForm.tsx` y `apps/web/components/perfil/PerfilClient.tsx` para usar el login con Google y Apple en `/r/[code]` cuando no hay sesión activa en el dispositivo (o mostrar directamente "Aceptar Reto ahora" si ya se logueó antes en ese dispositivo), y eliminar `WhatsappLinkPromptCard.tsx` y `apps/web/app/(app)/auth/magic/page.tsx`.
+- [x] 2.4 Actualizar las pruebas E2E de Playwright (`apps/web/e2e/invitacion.spec.ts` y `apps/web/e2e/returning-login.spec.ts`) para cubrir el login con Google y Apple (usuario nuevo que confirma `@usuario` y recibe +100 monedas, usuario existente que entra directo, y dispositivo ya logueado que abre `/r/[code]` o `/entrar` sin volver a pedir login), verificando que la suite de Playwright pase sin errores.

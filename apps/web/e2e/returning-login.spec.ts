@@ -7,27 +7,15 @@ const MOCK_SESSION: StoredSession = {
     id: "u-ana",
     username: "ana_ok",
     displayName: "Ana",
-    coinsAvailable: 50,
+    email: "ana@gmail.com",
+    coinsAvailable: 100,
     credibilityScore: 100,
     credibilityStatus: "GREEN",
-    whatsappLinked: false,
   },
 };
 
-test.describe("Acceso desde sitio web, Magic Link y vinculación de WhatsApp", () => {
+test.describe("Login integrado con Google y Apple en /entrar y sesión persistente", () => {
   test.beforeEach(async ({ page }) => {
-    await page.route("**/api/auth/whatsapp/login-url", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          messageText: "Quiero entrar a mi cuenta IBetU",
-          whatsappUrl:
-            "https://wa.me/5491100000000?text=Quiero%20entrar%20a%20mi%20cuenta%20IBetU",
-        }),
-      });
-    });
-
     const emptyChallenges = {
       items: [],
       counts: {
@@ -60,34 +48,151 @@ test.describe("Acceso desde sitio web, Magic Link y vinculación de WhatsApp", (
     });
   });
 
-  test("visitante sin sesión en /entrar?modo=nuevo ve alta instantánea y puede cambiar a 'Ya tengo perfil'", async ({
+  test("usuario nuevo en /entrar elige Google, confirma su @usuario único (+100 monedas) y entra al inicio", async ({
     page,
   }) => {
+    let profilePayload: Record<string, unknown> | null = null;
+
+    await page.route("**/api/auth/oauth/verify", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "NEEDS_PROFILE",
+          onboardingToken: "onb-google-123",
+          provider: "GOOGLE",
+          email: "martin@gmail.com",
+          suggestedDisplayName: "Martín",
+          suggestedUsername: "martin",
+        }),
+      });
+    });
+
+    await page.route("**/api/auth/oauth/complete-profile", async (route) => {
+      profilePayload = JSON.parse(route.request().postData() ?? "{}");
+      await route.fulfill({
+        status: 201,
+        contentType: "application/json",
+        body: JSON.stringify({
+          accessToken: "jwt-martin-100",
+          user: {
+            id: "u-martin",
+            username: "martin_ok",
+            displayName: "Martín",
+            email: "martin@gmail.com",
+            coinsAvailable: 100,
+            credibilityScore: 100,
+            credibilityStatus: "GREEN",
+          },
+        }),
+      });
+    });
+
     await page.goto("/entrar?modo=nuevo");
 
     await expect(page.getByTestId("instant-auth-card")).toBeVisible();
-    await expect(page.getByTestId("btn-switch-to-login")).toBeVisible();
+    await expect(page.getByTestId("btn-oauth-google")).toBeVisible();
+    await expect(page.getByTestId("btn-oauth-apple")).toBeVisible();
 
-    await page.getByTestId("btn-switch-to-login").click();
+    await page.getByTestId("btn-oauth-google").click();
 
-    await expect(page.getByTestId("returning-auth-card")).toBeVisible();
-    const wspBtn = page.getByTestId("btn-login-whatsapp");
-    await expect(wspBtn).toBeVisible();
-    await expect(wspBtn).toHaveAttribute(
-      "href",
-      /https:\/\/wa\.me\/.*Quiero%20entrar%20a%20mi%20cuenta%20IBetU/,
+    await expect(page.getByTestId("oauth-confirm-profile-card")).toBeVisible();
+    await expect(page.getByTestId("oauth-connected-email")).toHaveText(
+      "martin@gmail.com",
     );
+    await expect(page.locator("#auth-display-name")).toHaveValue("Martín");
+    await page.locator("#auth-username").fill("martin_ok");
+
+    await page.getByTestId("btn-confirm-profile").click();
+
+    await expect.poll(() => profilePayload).toEqual({
+      onboardingToken: "onb-google-123",
+      displayName: "Martín",
+      username: "martin_ok",
+    });
+
+    await expect(page).toHaveURL(/\/$/);
+    const saved = await page.evaluate(() =>
+      window.localStorage.getItem("ibetu:session"),
+    );
+    expect(saved).toContain("jwt-martin-100");
+    expect(saved).toContain("martin_ok");
   });
 
-  test("visitante sin sesión en /entrar?modo=ingresar ve directamente el botón 3D 'Entrar con mi WhatsApp'", async ({
+  test("usuario recurrente en /entrar?modo=ingresar toca Apple o Google e ingresa en 1 toque sin pedir @usuario de nuevo", async ({
     page,
   }) => {
+    await page.route("**/api/auth/oauth/verify", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "AUTHENTICATED",
+          accessToken: "jwt-returning-apple",
+          user: {
+            id: "u-ana",
+            username: "ana_ok",
+            displayName: "Ana",
+            email: "ana@privaterelay.appleid.com",
+            coinsAvailable: 150,
+            credibilityScore: 100,
+            credibilityStatus: "GREEN",
+          },
+        }),
+      });
+    });
+
     await page.goto("/entrar?modo=ingresar");
 
-    await expect(page.getByTestId("returning-auth-card")).toBeVisible();
-    const wspBtn = page.getByTestId("btn-login-whatsapp");
-    await expect(wspBtn).toBeVisible();
-    await expect(wspBtn).toContainText("Entrar con mi WhatsApp");
+    await expect(page.getByTestId("instant-auth-card")).toBeVisible();
+    await page.getByTestId("btn-oauth-apple").click();
+
+    await expect(page).toHaveURL(/\/$/);
+    const saved = await page.evaluate(() =>
+      window.localStorage.getItem("ibetu:session"),
+    );
+    expect(saved).toContain("jwt-returning-apple");
+  });
+
+  test("si el @usuario elegido ya está en uso al confirmar perfil, muestra sugerencias disponibles", async ({
+    page,
+  }) => {
+    await page.route("**/api/auth/oauth/verify", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          status: "NEEDS_PROFILE",
+          onboardingToken: "onb-conflict-1",
+          provider: "GOOGLE",
+          email: "lucas@gmail.com",
+          suggestedDisplayName: "Lucas",
+          suggestedUsername: "lucas",
+        }),
+      });
+    });
+
+    await page.route("**/api/auth/oauth/complete-profile", async (route) => {
+      await route.fulfill({
+        status: 409,
+        contentType: "application/json",
+        body: JSON.stringify({
+          message: "Ese @usuario ya está en uso. Probá con alguna sugerencia.",
+          suggestions: ["lucas_ok", "lucas7"],
+        }),
+      });
+    });
+
+    await page.goto("/entrar");
+    await page.getByTestId("btn-oauth-google").click();
+    await page.getByTestId("btn-confirm-profile").click();
+
+    await expect(page.getByTestId("oauth-profile-error")).toContainText(
+      "Ese @usuario ya está en uso",
+    );
+    await expect(page.getByTestId("username-suggestion-lucas_ok")).toBeVisible();
+    await page.getByTestId("username-suggestion-lucas_ok").click();
+    await expect(page.locator("#auth-username")).toHaveValue("lucas_ok");
   });
 
   test("visitante con sesión activa en localStorage es redirigido automáticamente de /entrar a /", async ({
@@ -100,143 +205,4 @@ test.describe("Acceso desde sitio web, Magic Link y vinculación de WhatsApp", (
     await page.goto("/entrar?modo=ingresar");
     await expect(page).toHaveURL(/\/$/);
   });
-
-  test("canje exitoso de Magic Link en /auth/magic?token=... guarda la sesión y redirige a /", async ({
-    page,
-  }) => {
-    let redeemedToken: string | null = null;
-    await page.route("**/api/auth/magic-login", async (route) => {
-      const body = route.request().postDataJSON() as { token: string };
-      redeemedToken = body.token;
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({
-          accessToken: "magic-jwt-999",
-          user: {
-            id: "u-magic",
-            username: "guille_magic",
-            displayName: "Guille",
-            coinsAvailable: 100,
-            credibilityScore: 100,
-            credibilityStatus: "GREEN",
-            whatsappLinked: true,
-          },
-        }),
-      });
-    });
-
-    await page.goto("/auth/magic?token=tok_valido_123");
-
-    await expect.poll(() => redeemedToken).toBe("tok_valido_123");
-    await expect(page).toHaveURL(/\/$/);
-
-    const saved = await page.evaluate(() =>
-      window.localStorage.getItem("ibetu:session"),
-    );
-    expect(saved).toContain("magic-jwt-999");
-    expect(saved).toContain("guille_magic");
-  });
-
-  test("enlace mágico vencido en /auth/magic?token=... muestra estado de error y botón de WhatsApp", async ({
-    page,
-  }) => {
-    await page.route("**/api/auth/magic-login", async (route) => {
-      await route.fulfill({
-        status: 401,
-        contentType: "application/json",
-        body: JSON.stringify({
-          message: "Enlace inválido o vencido.",
-        }),
-      });
-    });
-
-    await page.goto("/auth/magic?token=tok_vencido");
-
-    await expect(page.getByTestId("magic-login-error")).toContainText(
-      "Enlace inválido o vencido.",
-    );
-    await expect(page.getByTestId("magic-retry-wsp")).toBeVisible();
-  });
-
-  test("al crear el primer reto sin WhatsApp vinculado muestra el aviso de vinculación (+50 monedas)", async ({
-    page,
-  }) => {
-    await page.addInitScript((session) => {
-      window.localStorage.setItem("ibetu:session", JSON.stringify(session));
-    }, MOCK_SESSION);
-
-    await page.route("**/api/friends", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify([]),
-      });
-    });
-
-    await page.route("**/api/challenges/presets", async (route) => {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify([
-          {
-            id: "ping-pong",
-            label: "1v1 Ping Pong",
-            text: "Partido de Ping Pong 1v1 al mejor de 3 sets.",
-          },
-        ]),
-      });
-    });
-
-    await page.route("**/api/challenges", async (route) => {
-      if (route.request().method() === "POST") {
-        await route.fulfill({
-          status: 201,
-          contentType: "application/json",
-          body: JSON.stringify({
-            id: "ch-new-1",
-            inviteCode: "ABC1234",
-            title: "Partido de Ping Pong 1v1 al mejor de 3 sets.",
-            mode: "COINS",
-            stakeAmount: 10,
-            shareUrl: "http://localhost:3000/r/ABC1234",
-            whatsappShareUrl:
-              "https://wa.me/?text=Te%20desafio%20http%3A%2F%2Flocalhost%3A3000%2Fr%2FABC1234",
-          }),
-        });
-      }
-    });
-
-    await page.route("**/api/auth/whatsapp/link-token", async (route) => {
-      await route.fulfill({
-        status: 201,
-        contentType: "application/json",
-        body: JSON.stringify({
-          token: "VINC-998877",
-          messageText: "Vincular mi cuenta IBetU #VINC-998877",
-          whatsappUrl:
-            "https://wa.me/5491100000000?text=Vincular%20mi%20cuenta%20IBetU%20%23VINC-998877",
-          expiresInSeconds: 900,
-        }),
-      });
-    });
-
-    await page.goto("/crear");
-    await page
-      .getByTestId("preset-pill")
-      .filter({ hasText: "1v1 Ping Pong" })
-      .click();
-    await page.getByTestId("submit-crear-reto").click();
-
-    await expect(page.getByTestId("created-challenge-card")).toBeVisible();
-    await expect(page.getByTestId("whatsapp-reverse-link-box")).toBeVisible();
-
-    await page.getByTestId("btn-generate-wsp-token").click();
-    await expect(page.getByTestId("wsp-link-token")).toHaveText("VINC-998877");
-    await expect(page.getByTestId("wsp-send-link")).toHaveAttribute(
-      "href",
-      /VINC-998877/,
-    );
-  });
 });
-

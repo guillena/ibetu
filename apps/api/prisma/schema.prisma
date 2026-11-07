@@ -63,6 +63,9 @@ model User {
   id                   String    @id @default(uuid())
   displayName          String
   username             String    @unique
+  email                String?   @unique
+  googleSub            String?   @unique
+  appleSub             String?   @unique
   whatsappPhone        String?   @unique
   paymentAlias         String?
   invitedById          String?

@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Icon } from "@/components/ui/Icon";
 import { InstantAuthCard } from "@/components/auth/InstantAuthCard";
-import { WhatsappLinkPromptCard } from "@/components/auth/WhatsappLinkPromptCard";
 import { useShell, type CurrencyMode } from "@/components/shell/shell-context";
 import {
   ApiError,
@@ -183,7 +182,7 @@ export function CrearRetoForm() {
     }
 
     if (!session?.accessToken) {
-      setError("Creá tu perfil rápido arriba o abajo para enviar el reto.");
+      setError("Iniciá sesión con Google o Apple arriba para enviar el reto.");
       return;
     }
 
@@ -228,7 +227,7 @@ export function CrearRetoForm() {
       `🎯 *"${created.title}"*`,
       stakeLine,
       "",
-      "👉 *Aceptá el reto acá (recibís +50 monedas gratis):*",
+      "👉 *Aceptá el reto acá (recibís +100 monedas gratis):*",
       fullInviteUrl,
     ].join("\n");
 
@@ -308,14 +307,6 @@ export function CrearRetoForm() {
               <Icon name="chevron_right" size={18} />
             </Link>
           </div>
-
-          {session?.accessToken && !session.user.whatsappLinked && (
-            <WhatsappLinkPromptCard
-              accessToken={session.accessToken}
-              title="Vinculá tu WhatsApp para asegurar tu cuenta (+50 monedas)"
-              subtitle="Así te avisamos cuando tu amigo acepte el reto y podés volver a entrar a tu perfil desde cualquier dispositivo."
-            />
-          )}
         </section>
       </div>
     );
@@ -335,8 +326,8 @@ export function CrearRetoForm() {
 
       {!session && (
         <InstantAuthCard
-          title="Antes de lanzar tu reto, creá tu perfil"
-          subtitle="Te regalamos 50 monedas al instante para apostar con tus amigos."
+          title="Antes de lanzar tu reto, entrá con Google o Apple"
+          subtitle="Si es tu primera vez, confirmás tu @usuario y te regalamos 100 monedas al instante para apostar con tus amigos."
         />
       )}
 
@@ -655,4 +646,3 @@ export function CrearRetoForm() {
     </div>
   );
 }
-

@@ -5,10 +5,13 @@ export type ChallengeStatus = "PENDING" | "ACTIVE" | "RESULT" | "DISPUTE" | "CLO
 export type OpenTab = "IN_PLAY" | "TO_DECLARE" | "INVITATION_RECEIVED" | "INVITATION_SENT";
 export type OpenRole = "CREATOR" | "OPPONENT" | "JUDGE";
 
+export type OAuthProvider = "GOOGLE" | "APPLE";
+
 export interface SessionUser {
   id: string;
   username: string;
   displayName: string;
+  email?: string | null;
   coinsAvailable: number;
   credibilityScore: number;
   credibilityStatus: FairPlayBand;
@@ -16,6 +19,21 @@ export interface SessionUser {
 }
 
 export type AuthUser = SessionUser;
+
+export type OAuthVerifyResponse =
+  | {
+      status: "AUTHENTICATED";
+      accessToken: string;
+      user: SessionUser;
+    }
+  | {
+      status: "NEEDS_PROFILE";
+      onboardingToken: string;
+      provider: OAuthProvider;
+      email: string;
+      suggestedDisplayName: string;
+      suggestedUsername: string;
+    };
 
 export interface StoredSession {
   accessToken: string;
@@ -84,28 +102,39 @@ export interface ProfileView {
   };
 }
 
-export interface WhatsappLoginUrlResponse {
-  messageText: string;
-  whatsappUrl: string;
+export function buildDevOAuthToken(provider: OAuthProvider): string {
+  const email =
+    provider === "GOOGLE" ? "jugador@gmail.com" : "jugador@icloud.com";
+  return `dev:${provider}:sub_${provider.toLowerCase()}:${email}:Jugador`;
 }
 
-export const DEFAULT_WHATSAPP_LOGIN_MESSAGE = "Quiero entrar a mi cuenta IBetU";
-
-export function buildFallbackWhatsappLoginUrl(botNumber = "5490000000000"): string {
-  return `https://wa.me/${botNumber}?text=${encodeURIComponent(DEFAULT_WHATSAPP_LOGIN_MESSAGE)}`;
+export async function verifyOAuth(
+  provider: OAuthProvider,
+  idToken?: string,
+  displayNameHint?: string,
+): Promise<OAuthVerifyResponse> {
+  return apiFetch<OAuthVerifyResponse>("/auth/oauth/verify", {
+    method: "POST",
+    token: null,
+    body: JSON.stringify({
+      provider,
+      idToken: idToken ?? buildDevOAuthToken(provider),
+      ...(displayNameHint ? { displayNameHint } : {}),
+    }),
+  });
 }
 
-export async function fetchWhatsappLoginUrl(): Promise<WhatsappLoginUrlResponse> {
-  try {
-    return await apiFetch<WhatsappLoginUrlResponse>("/auth/whatsapp/login-url", {
-      token: null,
-    });
-  } catch {
-    return {
-      messageText: DEFAULT_WHATSAPP_LOGIN_MESSAGE,
-      whatsappUrl: buildFallbackWhatsappLoginUrl(),
-    };
-  }
+export async function completeOAuthProfile(input: {
+  onboardingToken: string;
+  displayName: string;
+  username: string;
+  inviteCode?: string;
+}): Promise<StoredSession> {
+  return apiFetch<StoredSession>("/auth/oauth/complete-profile", {
+    method: "POST",
+    token: null,
+    body: JSON.stringify(input),
+  });
 }
 
 export interface FriendItem {

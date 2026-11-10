@@ -18,11 +18,11 @@ En todo desafío en modo `Monedas`, el sistema MUST reservar exactamente el mism
 - **THEN** el sistema procesa únicamente la primera liquidación acreditando las 20 monedas al ganador una sola vez y rechaza las solicitudes duplicadas manteniendo el saldo consistente
 
 ### Requirement: Bono de bienvenida desdoblado (Registro + Vinculación WhatsApp)
-El sistema SHALL otorgar un total de 100 monedas de bienvenida a cada usuario nuevo, acreditando 50 monedas al crear la cuenta inicial y las 50 monedas restantes únicamente cuando el usuario complete por primera vez la vinculación verificada de su número de WhatsApp.
+El sistema SHALL otorgar un total de 100 monedas de bienvenida a cada usuario nuevo, acreditando las 100 monedas en un único tramo en el momento en que el usuario completa su alta inicial autenticándose con Google o Apple y confirmando su `@usuario`.
 
 #### Scenario: Acreditación de bienvenida en dos tramos
-- **WHEN** un usuario se registra con Nombre y `@usuario` y posteriormente vincula su número de WhatsApp por primera vez
-- **THEN** el sistema acredita 50 monedas en el alta inicial y 50 monedas adicionales tras confirmar el webhook de WhatsApp, registrando ambos movimientos en su historial
+- **WHEN** un usuario nuevo se autentica por primera vez con Google o Apple y confirma su Nombre y `@usuario`
+- **THEN** el sistema acredita las 100 monedas de bienvenida en su monedero de forma idempotente (`BONUS_INIT`) y registra el movimiento en su historial
 
 ### Requirement: Premio de constancia por jugar durante 3 días consecutivos
 El sistema SHALL otorgar una recompensa automática de +30 monedas cada vez que un usuario complete al menos un desafío cerrado con ganador definido (sin disputa ni cancelación/empate) por día calendario durante 3 días consecutivos, reiniciando el contador de 3 días tras otorgar el premio o si se interrumpe un día.
@@ -36,10 +36,10 @@ El sistema SHALL otorgar una recompensa automática de +30 monedas cada vez que 
 - **THEN** el sistema no contabiliza ese día como completado para el premio de constancia de 3 días
 
 ### Requirement: Premio por viralidad al invitar amigos nuevos
-El sistema SHALL acreditar +30 monedas al usuario invitador por cada amigo nuevo que se registre a través de su enlace de invitación, siempre que dicho amigo haya vinculado su número de WhatsApp y participado en su primer desafío activo.
+El sistema SHALL acreditar +30 monedas al usuario invitador por cada amigo nuevo que se registre con su cuenta verificada de Google o Apple a través de su enlace de invitación y participe en su primer desafío activo.
 
 #### Scenario: Amigo invitado vincula WhatsApp y juega su primer reto
-- **WHEN** el Jugador B (invitado por el Jugador A) completa la vinculación de su WhatsApp y acepta su primer desafío
+- **WHEN** el Jugador B (invitado por el Jugador A) completa su registro con Google o Apple desde el enlace compartido y acepta su primer desafío
 - **THEN** el sistema acredita +30 monedas en el monedero del Jugador A bajo el concepto de premio por viralidad
 
 ### Requirement: Recompensa por actuar como Juez y Salvavidas por saldo cero
@@ -74,4 +74,3 @@ El ganador de un reto por `Plata` SHALL poder reclamar el incumplimiento del pag
 #### Scenario: Pago ya confirmado
 - **WHEN** el ganador ya confirmó "Pago recibido"
 - **THEN** el sistema no admite un reclamo de incumplimiento posterior
-
